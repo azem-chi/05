@@ -60,8 +60,7 @@ function loadState(){try{
   if(old){localStorage.setItem('azem_S',old);localStorage.removeItem('fitpulse_S');}
   const r=localStorage.getItem('azem_S');
   if(r){const p=JSON.parse(r);S={...S,...p};
-    // FIX: apiKey و coachHistory سحاب فقط — نمسحهما من أي نسخة محلية قديمة
-    delete S.apiKey;
+    // FIX: coachHistory لا تُحمَّل من localStorage — سحاب فقط
     delete S.coachHistory;
     if(S.mode==='tv') S.mode='mobile'; // migrate: tv mode removed
     // FIX: مزامنة startDate بين S.startDate وS.user.startDate

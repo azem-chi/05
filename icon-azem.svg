@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#1c1c1c"/>
+      <stop offset="100%" stop-color="#080808"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="50%" cy="45%" r="42%">
+      <stop offset="0%" stop-color="#FFB800" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#FFB800" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFE55A"/>
+      <stop offset="40%" stop-color="#E19E0A"/>
+      <stop offset="100%" stop-color="#B87800"/>
+    </linearGradient>
+    <linearGradient id="gold_hl" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF4A0" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#FFD700" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="6" dy="6" stdDeviation="8" flood-color="#000" flood-opacity="0.6"/>
+    </filter>
+    <clipPath id="circle"><circle cx="256" cy="256" r="252"/></clipPath>
+  </defs>
+  <!-- خلفية -->
+  <circle cx="256" cy="256" r="256" fill="url(#bg)"/>
+  <!-- glow -->
+  <circle cx="256" cy="256" r="256" fill="url(#glow)"/>
+  <!-- حلقة ذهبية -->
+  <circle cx="256" cy="256" r="246" fill="none" stroke="url(#gold)" stroke-width="14" opacity="0.9"/>
+  <circle cx="256" cy="256" r="250" fill="none" stroke="#FFE066" stroke-width="3" opacity="0.4"/>
+  <!-- Z الصاعقة -->
+  <g clip-path="url(#circle)" filter="url(#shadow)">
+    <polygon points="
+      122,103 390,103 390,163
+      197,363 390,363 390,423
+      122,423 122,363
+      315,163 122,163
+    " fill="url(#gold)"/>
+    <!-- ضوء علوي -->
+    <polygon points="122,103 390,103 390,163 320,163 122,163" fill="url(#gold_hl)"/>
+    <!-- خط بريق -->
+    <line x1="122" y1="103" x2="390" y2="103" stroke="#FFFACC" stroke-width="5" opacity="0.7"/>
+  </g>
+  <!-- نص AZEM -->
+  <text x="256" y="468" font-family="DejaVu Sans,Arial,sans-serif" font-weight="bold"
+    font-size="46" fill="#FFD234" text-anchor="middle" letter-spacing="6">AZEM</text>
+  <rect x="190" y="442" width="132" height="3" rx="1.5" fill="#D4A828" opacity="0.7"/>
+</svg>

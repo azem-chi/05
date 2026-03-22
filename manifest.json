@@ -1,0 +1,40 @@
+{
+  "name": "AZEM (عزم)",
+  "short_name": "AZEM",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#07090F",
+  "theme_color": "#D4A843",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192-2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512-2.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-192-2.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "icon-512-2.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "label": "AZEM — تطبيق اللياقة البدنية"
+    }
+  ],
+  "description": "تطبيق لياقة بدنية شخصي مع مدرب ذكاء اصطناعي",
+  "lang": "ar",
+  "dir": "rtl",
+  "scope": "./",
+  "version": "9.3.0"
+}

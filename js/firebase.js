@@ -262,7 +262,8 @@ window.obFirebaseGoogleSignIn = async function() {
       if (hasData) {
         obFinish();
       } else {
-        obGoToStep('password-link');
+        // مستخدم جديد — ابدأ جمع المعلومات
+        obGoToStep('goal');
       }
     } else {
       window._obGoogleJustSignedIn = false;

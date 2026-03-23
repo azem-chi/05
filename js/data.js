@@ -104,10 +104,10 @@ function saveState(immediate = false) {
 }
 function _doSaveState() {
   try {
-    // FIX: apiKey و coachHistory لا تُحفظ محلياً — سحاب فقط
+    // FIX: coachHistory لا تُحفظ محلياً — سحاب فقط (ثقيلة وحساسة)
     const local = JSON.parse(JSON.stringify(S));
-    delete local.apiKey;
     delete local.coachHistory;
+    local._localTs = Date.now(); // FIX: كان لا يُضبط أبداً → السحاب يفوز دائماً
     localStorage.setItem('azem_S', JSON.stringify(local));
   } catch(e) {
     // FIX: QuotaExceededError — تخفيف تدريجي بدون تلويث S في الذاكرة

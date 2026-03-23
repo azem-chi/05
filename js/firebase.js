@@ -148,6 +148,8 @@ async function pullFromCloud(uid) {
         merged.completedDays = [...new Set([...(S.completedDays || []), ...(remote.completedDays || [])])];
         merged.streak        = Math.max(S.streak        || 0, remote.streak        || 0);
         merged.customImages  = localImages || {};
+        // FIX: لا نسمح للسحاب بمسح apiKey إذا كان محلياً موجوداً
+        if (!merged.apiKey && S.apiKey) merged.apiKey = S.apiKey;
         Object.assign(S, merged);
         saveState();
         try { render(); } catch(e) {}

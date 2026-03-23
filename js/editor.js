@@ -775,6 +775,7 @@ function shareProgress() {
   });
 }
 
+async 
 /* ══════════════════════════════════════════
    PROGRESS PHOTO — صور التقدم الأسبوعية
    تُخزَّن محلياً بـ base64 في localStorage
@@ -1413,12 +1414,12 @@ function obNext() {
     return;
   }
 
-  // ── days → auth ──
+  // ── days → finish ──
   if (step === 'days') {
     if (!S.user.trainTime) S.user.trainTime = '18:00';
     if (!S.commitmentDays?.length) S.commitmentDays = [1,3,5];
     saveState();
-    obGoToStep('auth');
+    obFinish();
     return;
   }
 
@@ -1598,43 +1599,52 @@ function renderObStep() {
   const el = document.getElementById('ob-steps');
   if (!el) return;
 
-  // ── RETURNING — لديك حساب أم مستخدم جديد؟ ──
+  // ── RETURNING — شاشة تسجيل الدخول الإجباري ──
   if (step === 'returning') {
     el.innerHTML = `
       <div style="min-height:100vh;display:flex;flex-direction:column;
         align-items:center;justify-content:center;padding:40px 24px;gap:0;">
         <div style="font-size:64px;margin-bottom:16px;animation:iconPulse 2s ease-in-out infinite;">⚡</div>
         <div style="font-size:30px;font-weight:900;color:var(--gold);letter-spacing:2px;margin-bottom:6px;">AZEM</div>
-        <div style="font-size:13px;color:var(--dim);margin-bottom:48px;text-align:center;">
+        <div style="font-size:13px;color:var(--dim);margin-bottom:40px;text-align:center;line-height:1.8;">
           ${_t('تطبيق اللياقة الذكي','Smart Fitness App','App Fitness Intelligent')}
         </div>
 
-        <!-- زر المستخدم المسجل — الأول والأبرز -->
-        <button onclick="obGoToStep('login')"
-          style="width:100%;max-width:340px;padding:18px;border-radius:18px;
-          background:linear-gradient(135deg,var(--gl),var(--gd));
-          border:none;color:var(--night);font-family:'Cairo',sans-serif;
-          font-size:16px;font-weight:900;cursor:pointer;
-          box-shadow:0 6px 24px var(--glow);margin-bottom:14px;">
-          ${_t('لديّ حساب — سجّل دخولي','I have an account — Sign in','J\'ai un compte — Connexion')}
-        </button>
+        <div style="width:100%;max-width:340px;display:flex;flex-direction:column;gap:12px;">
 
-        <!-- زر المستخدم الجديد -->
-        <button onclick="obGoToStep('welcome')"
-          style="width:100%;max-width:340px;padding:16px;border-radius:18px;
-          background:transparent;
-          border:1.5px solid var(--border);
-          color:var(--txt);font-family:'Cairo',sans-serif;
-          font-size:15px;font-weight:700;cursor:pointer;margin-bottom:32px;">
-          ${_t('مستخدم جديد — ابدأ رحلتك','New user — Start your journey','Nouveau — Commencer')}
-        </button>
+          <!-- Google Sign In — الوحيد المطلوب -->
+          <button id="ob-google-btn" onclick="obFirebaseGoogleSignIn()"
+            style="width:100%;padding:18px;border-radius:18px;
+            background:rgba(66,133,244,.12);border:2px solid rgba(66,133,244,.4);
+            color:#4285f4;font-family:'Cairo',sans-serif;font-size:16px;font-weight:800;
+            cursor:pointer;display:flex;align-items:center;justify-content:center;gap:12px;
+            box-shadow:0 4px 20px rgba(66,133,244,.15);">
+            <svg width="22" height="22" viewBox="0 0 48 48">
+              <path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/>
+            </svg>
+            ${_t('تسجيل الدخول بـ Google','Continue with Google','Continuer avec Google')}
+          </button>
 
-        <button onclick="obGoToStep('lang')"
-          style="background:none;border:none;color:var(--dim);
-          font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;opacity:.6;">
-          🌐 ${_t('تغيير اللغة','Change language','Changer la langue')}
-        </button>
+          <!-- تفسير -->
+          <div style="padding:14px 16px;border-radius:14px;background:rgba(212,168,67,.06);
+            border:1px solid rgba(212,168,67,.15);font-size:12px;color:var(--dim);
+            text-align:center;line-height:1.8;">
+            ${_t(
+              '🔑 يعمل للحالتين — مستخدم جديد أو مسجّل مسبقاً<br>بياناتك تُحفظ في السحاب وتُزامَن على جميع أجهزتك',
+              '🔑 Works for both — new or returning user<br>Your data is saved to the cloud across all devices',
+              '🔑 Pour les deux — nouveau ou inscrit<br>Données sauvegardées et synchronisées'
+            )}
+          </div>
+
+          <button onclick="obGoToStep('lang')"
+            style="background:none;border:none;color:var(--dim);
+            font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;opacity:.6;margin-top:4px;">
+            🌐 ${_t('تغيير اللغة','Change language','Changer la langue')}
+          </button>
+        </div>
       </div>`;
+    return;
+  }
     return;
   }
 

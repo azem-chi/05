@@ -2898,17 +2898,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Onboarding check — لا نُطلقه أثناء أي redirect تسجيل دخول
   const _anyRedirect = localStorage.getItem('azem_ob_redirect') || localStorage.getItem('azem_settings_redirect');
   if (!S.onboardingDone && !_anyRedirect) {
-    // FIX: لا نُظهر الـ onboarding حتى ينتهي الإنترو
-    function _tryShowOnboarding() {
+    // FIX: انتظر حتى ينتهي الإنترو قبل إظهار الـ onboarding
+    const _waitForIntro = setInterval(function() {
       const introRoot = document.getElementById('azem-intro-root');
-      const introVisible = introRoot && introRoot.style.display !== 'none' && introRoot.style.opacity !== '0';
-      if (introVisible) {
-        setTimeout(_tryShowOnboarding, 500);
-      } else {
+      const introGone = !introRoot || introRoot.style.display === 'none' || introRoot.style.opacity === '0';
+      if (introGone) {
+        clearInterval(_waitForIntro);
         setTimeout(showOnboarding, 300);
       }
-    }
-    _tryShowOnboarding();
+    }, 300);
   }
 
   // Animated background + theme icons (single canonical init)

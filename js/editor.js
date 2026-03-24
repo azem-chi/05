@@ -1645,8 +1645,6 @@ function renderObStep() {
       </div>`;
     return;
   }
-    return;
-  }
 
   // ── LOGIN — تسجيل دخول مباشر للمستخدم المسجل ──
   if (step === 'login') {

@@ -2,7 +2,7 @@
 /* ══════ SHARED API KEY — ضع مفتاح Groq المشترك هنا ══════ */
 /* ضع مفتاح Groq المشترك هنا — سيُستخدم لجميع المستخدمين */
 /* مثال: const SHARED_GROQ_KEY = ''; */
-const SHARED_GROQ_KEY = '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';
+const SHARED_GROQ_KEY = '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';
 
 /* ══════════════════════════════════════════
    XSS PROTECTION — دالة موحدة لجميع الملفات
@@ -109,6 +109,8 @@ function _doSaveState() {
     delete local.coachHistory;
     local._localTs = Date.now(); // FIX: كان لا يُضبط أبداً → السحاب يفوز دائماً
     localStorage.setItem('azem_S', JSON.stringify(local));
+    // FIX-FIREBASE-SYNC: استدعاء hook المزامنة بعد الحفظ المحلي مباشرة
+    if (typeof window._firebaseSyncHook === 'function') window._firebaseSyncHook();
   } catch(e) {
     // FIX: QuotaExceededError — تخفيف تدريجي بدون تلويث S في الذاكرة
     try {
@@ -168,15 +170,11 @@ function _doSaveState() {
   }
 }
 loadState();
-// نُصدّر saveState الأصلية قبل أي override من firebase.js
-window._dataJsSaveState = saveState;
+// تطبيق الثيم فوراً بعد loadState
 window.saveState = saveState;
-// FIX-THEME: تطبيق الثيم فوراً بعد loadState لضمان وجود data-theme دائماً
-// هذا يمنع @media (prefers-color-scheme: light) من التأثير على الثيم الداكن
 (function _applyInitialTheme() {
   const id = S.theme || 'default';
-  const el = document.documentElement;
-  el.setAttribute('data-theme', id);
+  document.documentElement.setAttribute('data-theme', id);
 })();
 
 /* ══════ EXERCISES ══════ */

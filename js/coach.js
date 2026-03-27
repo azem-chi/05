@@ -1189,28 +1189,32 @@ function renderCoach() {
       </div>` : ''}
     </div>
     <div style="text-align:center;font-size:10px;color:var(--dim);padding:3px 12px;opacity:.65;">⚠️ المدرب في مرحلة تجريبية — قد تحدث أخطاء</div>
-    <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;">
-      <label id="coach-img-btn" title="إرسال صورة" style="width:38px;height:38px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;position:relative;">
+    <div style="padding:10px 12px;border-top:1px solid var(--border);display:flex;align-items:center;gap:6px;">
+      <!-- يسار (RTL): صوت + صورة -->
+      <button id="coach-voice-btn" onclick="toggleVoiceInput()"
+        style="width:40px;height:40px;border-radius:12px;background:var(--card);
+        border:1.5px solid var(--border);font-size:18px;cursor:pointer;flex-shrink:0;
+        display:flex;align-items:center;justify-content:center;transition:all .2s;">🎤</button>
+      <label id="coach-img-btn" title="إرسال صورة" style="width:40px;height:40px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;position:relative;">
         📷
         <input type="file" id="coach-img-inp" accept="image/*" style="display:none" onchange="coachImgSelected(this)">
       </label>
-      <label id="coach-pdf-btn" title="رفع PDF" style="width:38px;height:38px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;">
+      <!-- preview صورة مختارة (يظهر مكان زر الصورة) -->
+      <div id="coach-img-preview" style="display:none;position:relative;width:40px;height:40px;flex-shrink:0;">
+        <img id="coach-img-thumb" style="width:40px;height:40px;border-radius:10px;object-fit:cover;border:1.5px solid var(--gold);">
+        <button onclick="coachClearImg()" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>
+      </div>
+      <!-- input في الوسط -->
+      <input id="coach-inp" placeholder="${window.T('coachPlaceholder')}"
+        style="flex:1;min-width:0;padding:11px 12px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;outline:none;"
+        onkeydown="if(event.key==='Enter')coachSend()"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
+      <!-- يمين (RTL): PDF + إرسال -->
+      <label id="coach-pdf-btn" title="رفع PDF" style="width:40px;height:40px;border-radius:12px;background:var(--card);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;flex-shrink:0;">
         📄
         <input type="file" id="coach-pdf-inp" accept=".pdf" style="display:none" onchange="coachPdfSelected(this)">
       </label>
-      <div id="coach-img-preview" style="display:none;position:relative;width:38px;height:38px;flex-shrink:0;">
-        <img id="coach-img-thumb" style="width:38px;height:38px;border-radius:10px;object-fit:cover;border:1.5px solid var(--gold);">
-        <button onclick="coachClearImg()" style="position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#ef4444;border:none;color:#fff;font-size:9px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">✕</button>
-      </div>
-      <input id="coach-inp" placeholder="${window.T('coachPlaceholder')}"
-        style="flex:1;padding:11px 14px;border-radius:14px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;outline:none;"
-        onkeydown="if(event.key==='Enter')coachSend()"
-        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'">
-      <button id="coach-voice-btn" onclick="toggleVoiceInput()"
-        style="width:42px;height:42px;border-radius:12px;background:var(--card);
-        border:1.5px solid var(--border);font-size:18px;cursor:pointer;flex-shrink:0;
-        transition:all .2s;">🎤</button>
-      <button id="coach-send-btn" onclick="coachSend()" style="width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;font-size:18px;cursor:pointer;flex-shrink:0;">↑</button>
+      <button id="coach-send-btn" onclick="coachSend()" style="width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;font-size:18px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;">↑</button>
     </div>
   </div>`;
   setTimeout(()=>{ const el=document.getElementById('coach-msgs'); if(el) el.scrollTop=el.scrollHeight; }, 120);
@@ -1894,7 +1898,15 @@ async function coachSend() {
         reply = '⚠️ انتهت مهلة الاتصال. تحقق من الإنترنت وحاول مجدداً.';
       }
     } else {
-      reply = '⚠️ ' + (e.message || 'تحقق من مفتاح Groq والإنترنت.');
+      const _eMsg = e.message || '';
+      if (_eMsg.toLowerCase().includes('invalid api key') || _eMsg.includes('401') || _eMsg.includes('invalid_api_key')) {
+        // مفتاح منتهي أو غير صالح — امسحه وأخبر المستخدم بوضوح
+        S.apiKey = '';
+        saveState();
+        reply = '🔑 انتهت صلاحية مفتاح Groq أو أنه غير صالح.\n\n**الحل:**\n1. افتح الإعدادات ⚙️\n2. احصل على مفتاح جديد مجاناً من [console.groq.com](https://console.groq.com)\n3. الصق المفتاح واضغط "حفظ"\n\nسأعمل بالوضع المحلي حتى إضافة مفتاح جديد 🤖';
+      } else {
+        reply = '⚠️ ' + (_eMsg || 'تحقق من مفتاح Groq والإنترنت.');
+      }
     }
   }
 

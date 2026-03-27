@@ -415,25 +415,15 @@ window.firebaseSyncNow = async function() {
 };
 
 // ══════════════════════════════════════════
-// FIX-GOOGLE-4: اعتراض saveState بشكل آمن
-// المشكلة السابقة: _origSaveState يُلتقط عند تحميل module — قد يكون undefined
+// FIX-SAVE-STATE: لا نُعيد تعريف saveState هنا
+// data.js يستدعي window._firebaseSyncHook بعد كل حفظ
 // ══════════════════════════════════════════
-// FIX-SAVE-STATE: تأجيل التقاط _orig حتى أول استدعاء — يضمن أن data.js حُمِّل
-window.saveState = (function() {
-  let _orig = null;
-  let _origResolved = false;
-  return function(immediate) {
-    if (!_origResolved) {
-      _orig = window._dataJsSaveState || null;
-      _origResolved = true;
-    }
-    if (typeof _orig === 'function') _orig(immediate);
-    if (_fbUid) {
-      clearTimeout(_syncDebounce);
-      _syncDebounce = setTimeout(pushToCloud, 2500);
-    }
-  };
-})();
+window._firebaseSyncHook = function() {
+  if (_fbUid) {
+    clearTimeout(_syncDebounce);
+    _syncDebounce = setTimeout(pushToCloud, 2500);
+  }
+};
 
 // FIX-CROSS-ORIGIN: لم نعد نستخدم redirect — نستخدم popup فقط
 // getRedirectResult لا يزال مُستدعى لتنظيف أي حالة redirect قديمة

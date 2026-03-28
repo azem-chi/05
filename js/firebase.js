@@ -147,9 +147,13 @@ async function pullFromCloud(uid) {
         merged.completedDays = [...new Set([...(S.completedDays || []), ...(remote.completedDays || [])])];
         merged.streak        = Math.max(S.streak        || 0, remote.streak        || 0);
         merged.customImages  = localImages || {};
-        // FIX: احمِ apiKey المحلي دائماً — remote قد يحتوي '' أو undefined
-        // يُعطى الأولوية للمفتاح المحلي إذا كان صالحاً (يبدأ بـ gsk_)
-        const _localKey = S.apiKey || '';
+
+        // FIX-CRITICAL: لا نسمح للسحابة بتعيين onboardingDone=true
+        // إذا كانت محلياً false — المستخدم لم يكمل الـ onboarding بعد
+        if (!S.onboardingDone) merged.onboardingDone = false;
+
+        // FIX: احمِ apiKey المحلي دائماً
+        const _localKey  = S.apiKey || '';
         const _remoteKey = remote.apiKey || '';
         if (_localKey.startsWith('gsk_')) {
           merged.apiKey = _localKey;
@@ -158,9 +162,10 @@ async function pullFromCloud(uid) {
         } else {
           merged.apiKey = _localKey || _remoteKey;
         }
+
         Object.assign(S, merged);
         saveState();
-        try { render(); } catch(e) {}
+        // لا نستدعي render() هنا — onAuthStateChanged يتحكم بذلك
         return true;
       }
     } else {
@@ -510,15 +515,14 @@ onAuthStateChanged(auth, async function(user) {
     const obVisible = obEl && obEl.style.display !== 'none';
     if (obVisible) return;
 
-    // تسجيل دخول تلقائي (جلسة سابقة) — إذا بياناته موجودة أو أكمل الـ onboarding
-    if (hasData || S.onboardingDone) {
-      S.onboardingDone = true;
-      saveState(true);
+    // تسجيل دخول تلقائي (جلسة سابقة)
+    if (S.onboardingDone) {
+      // المستخدم أكمل الـ onboarding → أظهر التطبيق
       try { render(); } catch(e) {}
       const firstName = (user.displayName || '').split(' ')[0];
       if (firstName) showMiniToast('☁️ مرحباً ' + firstName + '! بياناتك تُزامن تلقائياً');
     } else {
-      // مستخدم مسجل لكن لا بيانات ولم يكمل الـ onboarding → ابدأ من auth
+      // مستخدم مسجل لكن لم يكمل الـ onboarding → أظهر الـ onboarding
       if (typeof showOnboarding === 'function') setTimeout(showOnboarding, 300);
     }
 

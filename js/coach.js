@@ -2968,7 +2968,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const introGone = !introRoot || introRoot.style.display === 'none' || introRoot.style.opacity === '0';
       if (introGone) {
         clearInterval(_waitForIntro);
-        setTimeout(showOnboarding, 300);
+        // تحقق مرة أخيرة — onAuthStateChanged قد يكون غيّر S.onboardingDone
+        if (!S.onboardingDone) {
+          setTimeout(showOnboarding, 300);
+        }
       }
     }, 300);
   }

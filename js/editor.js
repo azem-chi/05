@@ -1355,8 +1355,10 @@ function obFinish() {
   }
   const obEl = document.getElementById('onboarding');
   if (obEl) obEl.style.display = 'none';
+  // تأكد أن التطبيق مرئي (على حالة PWA أول مرة)
+  if (typeof window._revealApp === 'function') window._revealApp();
   if (typeof window.pushToCloud === 'function') window.pushToCloud();
-  try { render(); } catch(e) {}
+  try { render(); } catch(e) { console.warn('render error in obFinish:', e); }
   setTimeout(() => { window._justFinishedOnboarding = false; startTutorial(); }, 800);
 }
 

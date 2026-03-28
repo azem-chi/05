@@ -2986,9 +2986,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const fabThemeIconEl = document.getElementById('fab-theme');
   if (fabThemeIconEl) fabThemeIconEl.textContent = THEME_ICONS[initTheme] || '☀️';
 
-  // Render main
+  // Render main — فقط إذا اكتمل الـ onboarding
   loadCustomSchedule();
-  render();
+  if (S.onboardingDone) {
+    render();
+  }
   // Auto-start tutorial on first launch (not right after onboarding - obFinish handles that)
   if (!S.tutorialDone && S.onboardingDone && !window._justFinishedOnboarding) {
     setTimeout(startTutorial, 600);

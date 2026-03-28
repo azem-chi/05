@@ -1,3 +1,4 @@
+
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getAuth, GoogleAuthProvider,
@@ -473,68 +474,29 @@ window._firebaseSyncHook = function() {
   }
 };
 
-// FIX-CROSS-ORIGIN: لم نعد نستخدم redirect — نستخدم popup فقط
-// getRedirectResult لا يزال مُستدعى لتنظيف أي حالة redirect قديمة
-getRedirectResult(auth).catch(() => {});
-
 // ══════════════════════════════════════════
-// Auth state listener
+// حذف جميع بيانات المستخدم
 // ══════════════════════════════════════════
-onAuthStateChanged(auth, async function(user) {
-  if (user) {
-    _fbUid = user.uid;
-    window._fbUid = user.uid;
-    window._fbUser = user;
-    updateAuthUI(user);
+window.deleteAllUserData = async function() {
+  const confirmed1 = confirm('⚠️ هل أنت متأكد من حذف جميع بياناتك نهائياً؟\n\nسيتم حذف:\n• بياناتك من هذا الجهاز\n• بياناتك من السحابة (Firestore)\n\nلا يمكن التراجع عن هذا الإجراء.');
+  if (!confirmed1) return;
+  const confirmed2 = confirm('⛔ تأكيد أخير: سيتم حذف كل بياناتك نهائياً. متأكد؟');
+  if (!confirmed2) return;
 
-    // إذا كان تسجيل الدخول يجري عبر obFirebaseGoogleSignIn/EmailAuth
-    // فلا نتدخل — هم يتحكمون بالتدفق
-    if (window._obGoogleJustSignedIn) return;
-
-    await saveUserProfile(user);
-    const hasData = await pullFromCloud(user.uid);
-
-    // رسالة مدرب معلقة
-    if (window._afterLoginSendCoach && window._coachPendingMsg) {
-      window._afterLoginSendCoach = false;
-      const _pending = window._coachPendingMsg;
-      window._coachPendingMsg = '';
-      setTimeout(() => {
-        const coachBtn = document.querySelector(".tab-btn[onclick*='coach']");
-        if (coachBtn && typeof switchTab === 'function') switchTab('coach', coachBtn);
-        setTimeout(() => {
-          const inp = document.getElementById('coach-inp');
-          if (inp) { inp.value = _pending; }
-          if (typeof coachSend === 'function') coachSend();
-        }, 400);
-      }, 800);
+  try {
+    if (_fbUid) {
+      await deleteDoc(doc(db, 'users', _fbUid));
     }
-
-    // الـ onboarding يعمل حالياً — لا تتدخل
-    const obEl = document.getElementById('onboarding');
-    const obVisible = obEl && obEl.style.display !== 'none';
-    if (obVisible) return;
-
-    // تسجيل دخول تلقائي (جلسة سابقة)
-    if (S.onboardingDone) {
-      // المستخدم أكمل الـ onboarding → أظهر التطبيق
-      try { render(); } catch(e) {}
-      const firstName = (user.displayName || '').split(' ')[0];
-      if (firstName) showMiniToast('☁️ مرحباً ' + firstName + '! بياناتك تُزامن تلقائياً');
-    } else {
-      // مستخدم مسجل لكن لم يكمل الـ onboarding → أظهر الـ onboarding
-      if (typeof showOnboarding === 'function') setTimeout(showOnboarding, 300);
-    }
-
-    // تحديث settings إذا كانت مفتوحة
-    const sheet = document.getElementById('settings-sheet');
-    if (sheet && sheet.style.display !== 'none') updateAuthUI(user);
-
-  } else {
-    _fbUid = null;
-    window._fbUid = null;
-    window._fbUser = null;
-    updateAuthUI(null);
+  } catch(e) {
+    console.warn('Firestore delete error:', e);
   }
-});
 
+  ['azem_S','fitpulse_S','azem_ob_redirect','azem_settings_redirect','azem_last_open'].forEach(k => localStorage.removeItem(k));
+  sessionStorage.clear();
+
+  if (typeof showMiniToast === 'function') showMiniToast('✅ تم حذف جميع البيانات');
+  setTimeout(() => {
+    if (typeof closeSettingsSheet === 'function') closeSettingsSheet();
+    location.reload();
+  }, 1200);
+};

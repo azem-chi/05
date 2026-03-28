@@ -1468,7 +1468,9 @@ function obSetAuthMode(mode) {
 }
 
 function obSkip() {
-  obGoToStep('info');
+  // التسجيل إجباري — لا يوجد تخطي
+  // لكن نحتفظ بالدالة للتوافق
+  obGoToStep('auth');
 }
 
 // ── حساب BMR وعرضه لحظياً في step body ──

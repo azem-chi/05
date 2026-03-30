@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090F" id="meta-theme-color">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="AZEM (عزم) — تطبيق لياقة بدنية متكامل: برامج تدريب، مدرب ذكي، تتبع التقدم، تغذية. يعمل بدون إنترنت.">
+
+<!-- Open Graph — معاينة جميلة عند المشاركة في واتساب وتويتر وفيسبوك -->
+<meta property="og:title"       content="AZEM (عزم) — تطبيق اللياقة الذكي">
+<meta property="og:description" content="مدرب ذكي بالذكاء الاصطناعي · برامج مخصصة · تتبع التقدم · يعمل offline · 3 لغات">
+<meta property="og:type"        content="website">
+<meta property="og:url"         content="https://chi-hani.github.io/AZEM/">
+<meta property="og:image"       content="https://chi-hani.github.io/AZEM/icon-512-2.png">
+<meta property="og:image:width"  content="512">
+<meta property="og:image:height" content="512">
+<meta property="og:locale"      content="ar_DZ">
+<meta property="og:site_name"   content="AZEM">
+<!-- Twitter Card -->
+<meta name="twitter:card"        content="summary">
+<meta name="twitter:title"       content="AZEM (عزم) — تطبيق اللياقة الذكي">
+<meta name="twitter:description" content="مدرب ذكي · برامج مخصصة · يعمل offline">
+<meta name="twitter:image"       content="https://chi-hani.github.io/AZEM/icon-512-2.png">
+<title>AZEM (عزم)</title>
+<link rel="manifest" href="manifest.json">
+<!-- Preconnect لتسريع تحميل الخطوط وFirebase -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://api.groq.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;700;900&family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-XXE47BMBT8"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-XXE47BMBT8');</script>
+
+<!-- ═══ STYLES ═══ -->
+<link rel="stylesheet" href="css/styles.css">
+<!-- Chart.js -->
+<script>
+// Chart.js — تحميل ذكي مع fallback
+(function(){
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js';
+  s.defer = true;
+  s.onerror = function() {
+    // CDN فشل — نستخدم نسخة محلية مبسطة
+    console.warn('[AZEM] Chart.js CDN failed — charts disabled offline');
+    window._chartJsFailed = true;
+  };
+  document.head.appendChild(s);
+})();
+</script>
+
+</head>
+<body>
+<!-- ═══════════════════════════════════
+     AZEM INTRO — PWA Only, Once Per Session
+═══════════════════════════════════ -->
+<!-- ═══ INTRO CSS ═══ -->
+<style>
+/* ══ إخفاء التطبيق فوراً عند التحميل — قبل أي JS ══
+   يمنع الـ flash قبل ظهور الإنترو */
+#app, .app-header, .bottom-tabs, #offline-banner {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+/* سيُرفع الإخفاء بواسطة JS بعد انتهاء الإنترو أو إذا لم يكن PWA */
+
+#azem-intro-root canvas { position:fixed; inset:0; width:100%; height:100%; }
+#logo {
+  position:fixed; inset:0; z-index:5;
+  pointer-events:none; opacity:0;
+  transition:opacity .9s ease;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+}
+#logo .logo-icon {
+  width:var(--logo-s, 42vmin);
+  height:var(--logo-s, 42vmin);
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%, -50%);
+  filter:drop-shadow(0 0 18px rgba(255,200,0,.9)) drop-shadow(0 0 50px rgba(255,160,0,.5));
+  animation:introIconPulse 2.5s ease-in-out infinite;
+  /* FIX: إزالة الخلفية الزرقاء من الـ CSS العام */
+  background:transparent !important;
+  box-shadow:none !important;
+}
+@keyframes introIconPulse {
+  0%,100%{ filter:drop-shadow(0 0 18px rgba(255,184,0,.7)) drop-shadow(0 0 50px rgba(255,184,0,.35)); }
+  50%    { filter:drop-shadow(0 0 30px rgba(255,210,52,1)) drop-shadow(0 0 80px rgba(255,184,0,.6)); }
+}
+.logo-ar {
+  font-family:'Cairo', sans-serif; font-weight:700;
+  font-size:clamp(18px,5vw,28px); color:rgba(255,210,80,.9);
+  letter-spacing:.05em;
+  margin-top:calc(var(--logo-s, 42vmin) * 0.55);
+  text-shadow:0 0 20px rgba(255,180,0,.7);
+  position:absolute; left:50%; top:50%;
+  transform:translate(-50%, calc(-50% + var(--logo-s, 42vmin) * 0.55));
+  white-space:nowrap;
+}
+.logo-sep {
+  width:0; height:1px; margin:14px 0;
+  background:linear-gradient(90deg,transparent,rgba(255,200,0,.5),rgba(255,220,100,.8),rgba(255,200,0,.5),transparent);
+  transition:width 1.2s cubic-bezier(.16,1,.3,1) .3s;
+}
+.logo-sep.open { width:min(200px,44vw); }
+.logo-tag {
+  font-family:'Cairo', sans-serif; font-weight:300;
+  font-size:clamp(9px,2.2vw,12px); color:rgba(200,170,80,.7);
+  letter-spacing:.3em; text-transform:uppercase;
+  opacity:0; transition:opacity .9s ease .6s;
+}
+.logo-tag.show { opacity:1; }
+</style>
+
+<script>
+// FIX: تعريف _revealApp مبكراً قبل أي استدعاء لها
+function _revealApp() {
+  var els = [
+    document.getElementById('app'),
+    document.querySelector('.app-header'),
+    document.querySelector('.bottom-tabs'),
+    document.getElementById('offline-banner'),
+  ];
+  els.forEach(function(el){ if(el) el.style.opacity = '1'; });
+}
+window._revealApp = _revealApp;
+
+</script>
+
+<div id="azem-intro-root" style="position:fixed;inset:0;z-index:9998;background:#0a0800;pointer-events:all;">
+<canvas id="cv"></canvas>
+
+<!-- Tap to start -->
+<div id="tap-screen" onclick="beginIntro()" style="
+  display:none; position:fixed; inset:0; z-index:100;
+  background:transparent; -webkit-tap-highlight-color:transparent;
+  cursor:default;
+"></div>
+
+<div id="logo">
+  <div class="logo-icon" id="logo-icon">
+    <img src="icon-192-2.png" alt="AZEM" style="width:100%;height:100%;object-fit:contain;border-radius:22%;">
+  </div>
+  <div id="logo-sub" style="position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;">
+    <div class="logo-ar" style="margin-top:0">تطبيق اللياقة البدنية</div>
+    <div class="logo-sep" id="sep"></div>
+    <div class="logo-tag" id="tag">ابدأ رحلتك اليوم</div>
+  </div>
+</div>
+
+<div id="p3">
+  <div class="nav">
+    <div class="nav-brand">
+      <img src="icon-192-2.png" alt="AZEM" width="32" height="32" style="border-radius:50%;flex-shrink:0;object-fit:cover;">
+      <span class="nav-name">AZEM</span>
+      <span class="nav-ar">عزم</span>
+    </div>
+    <div class="nav-btn">🔔</div>
+  </div>
+
+  <div class="hero" id="hero">
+    <div class="hero-label">مرحباً بك</div>
+    <div class="hero-title">ابدأ تدريبك اليوم</div>
+    <div class="hero-sub">تتبع تقدمك · برامج احترافية · مدرب ذكي</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat" id="st1"><span class="stat-val">0</span><div class="stat-lbl">تدريبات</div></div>
+    <div class="stat" id="st2"><span class="stat-val">0</span><div class="stat-lbl">سلسلة أيام</div></div>
+    <div class="stat" id="st3"><span class="stat-val">0</span><div class="stat-lbl">دقيقة</div></div>
+  </div>
+
+  <div class="nav-pills">
+    <div class="npill" id="np1"><div class="npi">🏋️</div><div class="nt"><span class="nl">برامج التدريب</span><span class="ns">خطط مخصصة لهدفك</span></div><span class="na">‹</span></div>
+    <div class="npill" id="np2"><div class="npi">🤖</div><div class="nt"><span class="nl">المدرب الذكي</span><span class="ns">توجيه شخصي بالذكاء الاصطناعي</span></div><span class="na">‹</span></div>
+    <div class="npill" id="np3"><div class="npi">📊</div><div class="nt"><span class="nl">تتبع التقدم</span><span class="ns">إحصاءات ومقارنات أسبوعية</span></div><span class="na">‹</span></div>
+  </div>
+</div>
+
+
+
+<script>
+// ═══════════════════════════════════════════
+//  CANVAS SETUP
+// ═══════════════════════════════════════════
+const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
+let W,H,cx,cy,dpr;
+function resize(){
+  dpr=Math.min(devicePixelRatio||1,2);
+  W=innerWidth; H=innerHeight; cx=W/2; cy=H/2;
+  cv.width=W*dpr; cv.height=H*dpr;
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+resize(); addEventListener('resize',resize);
+
+const cl=(v,a,b)=>Math.max(a,Math.min(b,v));
+const pr=(t,s,e)=>cl((t-s)/(e-s),0,1);
+const eOut =t=>1-Math.pow(1-t,3);
+const eOut5=t=>1-Math.pow(1-t,5);
+const eIn  =t=>t*t*t;
+const eBack=t=>{const c=1.8;return 1+c*Math.pow(t-1,3)+(c-1)*Math.pow(t-1,2);};
+const eInOut=t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+const lp=(a,b,t)=>a+(b-a)*t;
+
+// ═══════════════════════════════════════════
+//  SAMPLE LOGO SHAPE FROM SVG
+//  Renders SVG to offscreen canvas → reads pixels → collects target points
+// ═══════════════════════════════════════════
+let logoTargets=[];   // [{x,y,hue}]  — particle destinations
+let targetsReady=false;
+
+function sampleLogoShape(){
+  const SIZE=300;
+  const oc=document.createElement('canvas');
+  oc.width=SIZE; oc.height=SIZE;
+  const oc2=oc.getContext('2d');
+
+  // Draw the Z shape + ring directly on offscreen canvas
+  const scl=SIZE/512;
+  oc2.save();
+  oc2.scale(scl,scl);
+
+  // Golden circle outline
+  oc2.strokeStyle='#FFD234';
+  oc2.lineWidth=28;
+  oc2.beginPath();
+  oc2.arc(256,256,240,0,Math.PI*2);
+  oc2.stroke();
+
+  // Z shape
+  oc2.fillStyle='#FFD234';
+  oc2.beginPath();
+  oc2.moveTo(122,103);
+  oc2.lineTo(390,103);
+  oc2.lineTo(390,163);
+  oc2.lineTo(197,363);
+  oc2.lineTo(390,363);
+  oc2.lineTo(390,423);
+  oc2.lineTo(122,423);
+  oc2.lineTo(122,363);
+  oc2.lineTo(315,163);
+  oc2.lineTo(122,163);
+  oc2.closePath();
+  oc2.fill();
+  oc2.restore();
+
+  // Sample every 6px
+  const data=oc2.getImageData(0,0,SIZE,SIZE).data;
+  const pts=[];
+  const step=5;
+  for(let y=0;y<SIZE;y+=step){
+    for(let x=0;x<SIZE;x+=step){
+      const idx=(y*SIZE+x)*4;
+      if(data[idx+3]>60){
+        // brightness-based hue
+        const bright=(data[idx]+data[idx+1]+data[idx+2])/3;
+        pts.push({sx:x/SIZE, sy:y/SIZE, hue:35+bright/255*20});
+      }
+    }
+  }
+
+  // Shuffle for organic assembly order
+  for(let i=pts.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [pts[i],pts[j]]=[pts[j],pts[i]];
+  }
+
+  logoTargets=pts;
+  targetsReady=true;
+}
+
+// ═══════════════════════════════════════════
+//  PARTICLES
+// ═══════════════════════════════════════════
+const N=500;
+const parts=Array.from({length:N},(_,i)=>{
+  const angle=((i/N)*Math.PI*2*8)+(Math.random()-.5)*.4;
+  const startR=Math.max(innerWidth,innerHeight)*(.4+Math.random()*.7);
+  return {
+    i, angle, startR,
+    z:Math.random()*Math.PI*2,
+    hue:40+Math.random()*20,
+    size:Math.random()*1.8+.5,
+    speed:Math.random()*.5+.6,
+    born:Math.random()*.5,
+    delay:Math.random(), // stagger for logo formation
+  };
+});
+
+// ── Logo dimensions — must match CSS --logo-s variable ──
+function getLogoRect(){
+  const S=Math.min(W,H)*.42;
+  // Set CSS variable so icon size matches exactly
+  document.documentElement.style.setProperty('--logo-s', S+'px');
+  // Position subtitle below logo icon
+  const sub=document.getElementById('logo-sub');
+  if(sub) sub.style.top=(cy + S/2 + 12)+'px';
+  const lx=cx-S/2;
+  const ly=cy-S/2;
+  return {lx,ly,S};
+}
+
+// ─── Rings ───
+let rings=[];
+function addRing(){rings.push({r:0,alpha:1});}
+
+let T0=null, lastNow=null, domShown=false, formFired=false, logoRevealFired=false;
+const logoEl=document.getElementById('logo');
+const sep=document.getElementById('sep');
+const tag=document.getElementById('tag');
+
+// FIX: عند عودة الصفحة من الخلفية، نُعيد ضبط T0 حتى لا يقفز الإنترو للأمام
+document.addEventListener('visibilitychange', function(){
+  if(!document.hidden && T0 !== null && introStarted && !domShown){
+    // نُعيد T0 لتعويض الوقت الذي كانت الصفحة في الخلفية
+    T0 = null; // سيُعاد ضبطه في الـ frame القادم بشكل صحيح
+    lastNow = null;
+  }
+});
+
+// ═══════════════════════════════════════════
+//  BACKGROUND
+// ═══════════════════════════════════════════
+function drawBG(t){
+  ctx.fillStyle='#0a0800'; ctx.fillRect(0,0,W,H);
+  const a=eOut(pr(t,1.4,2.45));
+  if(a<=0) return;
+  ctx.save(); ctx.globalAlpha=a;
+  const g=ctx.createLinearGradient(0,0,W*.4,H);
+  g.addColorStop(0,'#f8f6ff');
+  g.addColorStop(.35,'#f0f4ff');
+  g.addColorStop(.7,'#f5f8ff');
+  g.addColorStop(1,'#ffffff');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+//  MAIN FRAME LOOP
+// ═══════════════════════════════════════════
+/*
+  TIMELINE:
+  0.0 – 2.5s   Phase 1: vortex spiral inward
+  2.5s          trigger: particles fly to logo shape
+  2.5 – 4.5s   Phase 2: particles assemble into logo
+  4.5 – 5.0s   logo held as particles, SVG fades in
+  5.0 – 5.5s   particles dissolve away, SVG logo clear
+  5.5 – 7.5s   subtitle + separator appear
+  7.5 – 8.5s   crossfade to main screen
+*/
+
+function frame(now){
+  if(!T0){ T0=now; lastNow=now; }
+  const delta = Math.min(now - lastNow, 100); // حد أقصى 100ms لمنع القفز
+  lastNow = now;
+
+  if(!frame._elapsed) frame._elapsed = 0;
+  frame._elapsed += delta;
+  const t = frame._elapsed / 1000;
+
+  ctx.clearRect(0,0,W,H);
+  drawBG(t);
+
+  const {lx,ly,S}=getLogoRect();
+
+  // ── Trigger logo formation ──
+  if(!formFired && t>1.75){
+    formFired=true;
+    addRing(); addRing();
+  }
+
+  // ── Rings ──
+  rings=rings.filter(r=>r.alpha>.004);
+  rings.forEach(r=>{
+    r.r+=Math.min(W,H)*.04; r.alpha*=.88;
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=r.alpha*.5;
+    ctx.strokeStyle=`rgba(255,180,0,${r.alpha})`;
+    ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.arc(cx,cy,r.r,0,Math.PI*2);ctx.stroke();
+    ctx.restore();
+  });
+
+  // ── Draw particles ──
+  parts.forEach((p,i)=>{
+    const born=1; // ظهور فوري من الفريم الأول
+
+    let px,py,alpha,size;
+
+    if(t<1.75){
+      // PHASE 1 — spiral inward
+      const prog=cl(pr(t,p.born*.2,.35+p.born*.35+1.4),0,1);
+      const r=p.startR*(1-eOut(prog)*.97);
+      const spin=t*p.speed*3+p.angle;
+      const depth=Math.sin(p.z+t*p.speed*.5);
+      px=cx+Math.cos(spin)*r;
+      py=cy+Math.sin(spin)*r*(.4+depth*.2);
+      alpha=born*(1-eIn(prog*.75))*.9;
+      size=p.size*(1+depth*.3);
+
+    } else {
+      // PHASE 2 — fly to logo shape position
+      const formP=eBack(cl(pr(t,1.75+p.delay*.56,2.66+p.delay*.28),0,1));
+
+      // Last vortex position
+      const lastProg=1;
+      const lastSpin=1.75*p.speed*3+p.angle;
+      const vx=cx+Math.cos(lastSpin)*(p.startR*.03);
+      const vy=cy+Math.sin(lastSpin)*(p.startR*.03)*0.4;
+
+      // Target: map to logo shape
+      if(targetsReady && logoTargets.length>0){
+        const tgt=logoTargets[i % logoTargets.length];
+        const tx=lx+tgt.sx*S;
+        const ty=ly+tgt.sy*S;
+        px=lp(vx,tx,formP);
+        py=lp(vy,ty,formP);
+      } else {
+        // Fallback: circle
+        const ang=i/N*Math.PI*2;
+        px=lp(vx, cx+Math.cos(ang)*S*.4, formP);
+        py=lp(vy, cy+Math.sin(ang)*S*.4, formP);
+      }
+
+      // Dissolve particles slowly AFTER logo is fully visible
+      const dissolveA=1-eOut(pr(t,4.55,5.6));
+      alpha=born*dissolveA*.95;
+      size=p.size*(1+formP*.3);
+    }
+
+    // Draw particle — amber من البداية
+    ctx.save();
+    ctx.globalAlpha=cl(alpha,0,1);
+    ctx.globalCompositeOperation='lighter';
+    ctx.fillStyle=`hsl(${p.hue},90%,65%)`;
+    ctx.beginPath();ctx.arc(px,py,size,0,Math.PI*2);ctx.fill();
+    ctx.restore();
+  });
+
+  // ── Vortex eye glow ──
+  if(t<2.7){
+    const eyeA=eOut(pr(t,.14,1.75))*(1-eOut(pr(t,1.54,1.89)));
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=eyeA*.6;
+    const eg=ctx.createRadialGradient(cx,cy,0,cx,cy,Math.min(W,H)*.13);
+    eg.addColorStop(0,'rgba(255,220,0,.9)');
+    eg.addColorStop(.4,'rgba(255,160,0,.4)');
+    eg.addColorStop(1,'transparent');
+    ctx.fillStyle=eg;ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  // ── Ambient logo glow when forming ──
+  if(t>2.8 && t<6){
+    const ga=eOut(pr(t,1.96,2.8))*(1-eIn(pr(t,3.5,4.2)));
+    const pulse=.7+Math.sin(t*1.4)*.3;
+    ctx.save();
+    ctx.globalCompositeOperation='lighter';
+    ctx.globalAlpha=ga*.12*pulse;
+    const cg=ctx.createRadialGradient(cx,cy,0,cx,cy,S*.65);
+    cg.addColorStop(0,'rgba(255,180,0,1)');cg.addColorStop(1,'transparent');
+    ctx.fillStyle=cg;ctx.fillRect(0,0,W,H);
+    ctx.restore();
+  }
+
+  // ── SVG logo fades IN on top of particle shape while they're still visible ──
+  if(t>3.15 && t<6.3){
+    const logoA=eOut(pr(t,3.15,4.06));
+    if(!logoRevealFired && logoA>0.01){
+      logoRevealFired=true;
+      logoEl.style.transition='none';
+    }
+    logoEl.style.opacity=String(Math.max(0,logoA*(1-eInOut(pr(t,5.46,6.02))*2)));
+    if(logoA>.6 && !sep.classList.contains('open')){
+      sep.classList.add('open');
+      setTimeout(()=>tag.classList.add('show'),300);
+    }
+  }
+
+  const toFinal=eInOut(pr(t,6.65,7.21));
+  if(toFinal>0){
+    ctx.save();
+    ctx.globalAlpha=toFinal;
+    ctx.fillStyle='#0f0d00';
+    ctx.fillRect(0,0,W,H);
+    ctx.restore();
+    logoEl.style.opacity=String(Math.max(0,1-toFinal*2));
+  }
+
+  if(!domShown && toFinal>.55){
+    domShown=true;
+    sessionStorage.setItem('azem_intro_done','1');
+    // إخفاء الإنترو وإظهار التطبيق الحقيقي
+    const introRoot = document.getElementById('azem-intro-root');
+    if(introRoot){
+      introRoot.style.transition='opacity .5s ease';
+      introRoot.style.opacity='0';
+      introRoot.style.pointerEvents='none';
+      setTimeout(()=>{ introRoot.style.display='none'; }, 500);
+    }
+    // إظهار التطبيق
+    _revealApp();
+    // FIX-ONBOARDING: الـ _waitForIntro في coach.js سيستدعي showOnboarding
+    // لا نستدعيها هنا لأن S وshowOnboarding قد لا تكونان محمّلتين بعد
+    return;
+  }
+
+  requestAnimationFrame(frame);
+}
+
+// ═══════════════════════════════════════════
+//  AUDIO
+// ═══════════════════════════════════════════
+function startAudio(){
+  try{
+    // FIX: حفظ AudioContext عالمياً لإيقافه عند التخطي
+    if(window._introAudioCtx){ try{window._introAudioCtx.close();}catch(e){} }
+    const a=new(window.AudioContext||window.webkitAudioContext)();
+    window._introAudioCtx = a;
+    const master=a.createGain();
+    master.gain.value=2.2;
+    const comp=a.createDynamicsCompressor();
+    comp.threshold.value=-6; comp.knee.value=3;
+    comp.ratio.value=4; comp.attack.value=0.003; comp.release.value=0.1;
+    master.connect(comp); comp.connect(a.destination);
+    const now=a.currentTime;
+
+    function sine(freq,startT,endT,maxVol,detune){
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='sine';
+      o.frequency.value=freq;
+      if(detune) o.detune.value=detune;
+      g.gain.setValueAtTime(0,now+startT);
+      g.gain.linearRampToValueAtTime(maxVol,now+startT+0.5);
+      g.gain.linearRampToValueAtTime(maxVol*0.8,now+endT-0.5);
+      g.gain.linearRampToValueAtTime(0,now+endT);
+      o.connect(g);g.connect(master);
+      o.start(now+startT);o.stop(now+endT+0.1);
+    }
+
+    function bell(freq,startT,vol){
+      const o=a.createOscillator(),g=a.createGain();
+      o.type='sine';o.frequency.value=freq;
+      g.gain.setValueAtTime(0,now+startT);
+      g.gain.linearRampToValueAtTime(vol,now+startT+0.015);
+      g.gain.exponentialRampToValueAtTime(0.001,now+startT+1.4);
+      o.connect(g);g.connect(master);
+      o.start(now+startT);o.stop(now+startT+1.8);
+    }
+
+    // Phase 1: دوامة
+    sine(87.3,   0,   3.0, 0.5);
+    sine(174.6,  0,   3.2, 0.35);
+    sine(220,    0.2, 3.2, 0.3,  2);
+    sine(261.6,  0.4, 3.0, 0.28,-1);
+    sine(349.2,  0.6, 3.0, 0.25, 3);
+
+    // Phase 2: تشكيل — أقصر
+    sine(220,  2.3, 4.0, 0.3);
+    sine(261.6,1.75,2.87,0.28);
+    sine(329.6,2.7, 4.1, 0.25, 1);
+    sine(392,  2.9, 4.2, 0.22, 2);
+
+    // Phase 3: أجراس الشعار — مبكرة
+    bell(523.25, 3.6, 0.22);
+    bell(659.25, 3.7, 0.20);
+    bell(783.99,2.66,0.17);
+    bell(1046.5,2.73,0.10);
+    bell(1318.5,2.80,0.07);
+    bell(2093,   4.1, 0.05);
+    bell(2637,   4.2, 0.03);
+
+  }catch(e){ console.warn('audio error:',e); }
+}
+
+// ═══════════════════════════════════════════
+//  START
+// ═══════════════════════════════════════════
+let introStarted=false;
+
+function beginIntro(){
+  if(introStarted) return;
+  introStarted=true;
+  _introStartTime = Date.now();
+  frame._elapsed = 0;
+  T0=null; lastNow=null;
+  document.getElementById('tap-screen').style.display='none';
+  startAudio();
+  requestAnimationFrame(frame);
+}
+
+// FIX: نمنع التخطي لأول 1.5 ثانية حتى لا يُتخطى الإنترو بنفس لمسة البداية
+let _introStartTime = 0;
+
+document.getElementById('cv').addEventListener('click', function(){
+  if(!introStarted || domShown) return;
+  if(Date.now() - _introStartTime < 1500) return;
+  if(window._introAudioCtx){ try{window._introAudioCtx.close();}catch(e){} window._introAudioCtx=null; }
+  frame._elapsed = 6700; // FIX: تخطي مباشرة للنهاية
+}, {passive:true});
+document.getElementById('cv').addEventListener('touchstart', function(){
+  if(!introStarted || domShown) return;
+  if(Date.now() - _introStartTime < 1500) return;
+  if(window._introAudioCtx){ try{window._introAudioCtx.close();}catch(e){} window._introAudioCtx=null; }
+  frame._elapsed = 6700; // FIX: تخطي مباشرة للنهاية
+}, {passive:true});
+
+function replayIntro(){
+  // FIX: التحقق من أن الإنترو لم ينتهِ بعد قبل إعادة تشغيله
+  if(!domShown) return; // الإنترو لا يزال يعمل
+
+  // Reset state
+  T0=null; lastNow=null;
+  frame._elapsed = 0;
+  domShown=false;
+  formFired=false;
+  logoRevealFired=false;
+  introStarted=false;
+  rings=[];
+
+  // Reset logo
+  if(logoEl){ logoEl.style.opacity='0'; logoEl.style.transition='none'; }
+  if(sep) sep.classList.remove('open');
+  if(tag) tag.classList.remove('show');
+
+  // Show canvas again
+  if(cv){ cv.style.transition='none'; cv.style.opacity='1'; }
+
+  // إظهار شاشة النقر مجدداً
+  const tapScr = document.getElementById('tap-screen');
+  if(tapScr) tapScr.style.display = 'flex';
+
+  // إعادة تشغيل الـ intro بعد إعادة أخذ عينات الشعار
+  sampleLogoShape();
+  setTimeout(beginIntro, 80);
+}
+// كشف replayIntro عالمياً (FIX: كانت تُستدعى من أماكن خارجية)
+window.replayIntro = replayIntro;
+
+document.fonts.ready.then(()=>{
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches
+             || window.navigator.standalone === true;
+  const alreadyShown = sessionStorage.getItem('azem_intro_done');
+  if(!isPWA || alreadyShown) return;
+  // FIX: sampleLogoShape تُشغَّل في setTimeout لتحرير الـ UI أولاً
+  setTimeout(()=>{
+    sampleLogoShape();
+    document.getElementById('tap-screen').style.display='flex';
+    setTimeout(beginIntro, 80);
+  }, 50);
+});
+</script>
+</div>
+<script>
+// إخفاء الإنترو إذا سبق عرضه في هذه الجلسة
+(function(){
+  // فحص فوري — قبل fonts.ready وقبل أي تأخير
+  var isPWA = window.matchMedia('(display-mode: standalone)').matches
+           || window.navigator.standalone === true;
+  var alreadyShown = sessionStorage.getItem('azem_intro_done');
+  var introRoot = document.getElementById('azem-intro-root');
+  if(!introRoot) return;
+  if(!isPWA || alreadyShown){
+    introRoot.style.display = 'none';
+    // FIX: #app يأتي بعد هذا السكريبت في الـ DOM — نؤجل حتى يصبح جاهزاً
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', function(){ _revealApp(); });
+    } else {
+      _revealApp();
+    }
+    // تعليم أن الإنترو غير موجود — coach.js سيستدعي showOnboarding بعد تحميل كل الملفات
+    window._introSkipped = true;
+  }
+})();
+</script>
+
+<canvas id="starfield"></canvas>
+
+
+<div id="app">
+  <div id="offline-banner">📡 وضع offline — المدرب والإشعارات لا تعمل</div>
+<header class="app-header">
+    <div class="header-row1">
+        <div class="logo-wrap">
+          <div class="logo-icon"><img src="icon-192-2.png" alt="AZEM عزم" style="width:32px;height:32px;border-radius:50%;object-fit:cover;" onerror="this.outerHTML='⚡'"></div>
+          <div class="logo-text"><div class="logo-name">AZEM (عزم)</div></div>
+        </div>
+        <div class="header-btns">
+          <button class="hdr-btn lang" id="lang-btn" onclick="cycleLang()">AR</button>
+          <button class="hdr-btn" onclick="openThemeModal()" id="theme-hdr-btn">🌙</button>
+          <button class="hdr-btn" onclick="cycleMode()" id="mode-hdr-btn">📱</button>
+          <button class="hdr-btn accent" onclick="startGuidedSession()">▶</button>
+          <!-- Google auth badge: shows login icon when not signed in, avatar when signed in -->
+          <button id="hdr-auth-btn" onclick="window._fbUser ? openSettingsSheet() : (S.onboardingDone ? firebaseSignIn() : obGoToStep('auth'))" title="تسجيل الدخول" style="min-width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;background:rgba(66,133,244,.15);border:1.5px solid rgba(66,133,244,.5);cursor:pointer;font-size:14px;flex-shrink:0;overflow:hidden;">
+            <svg width="16" height="16" viewBox="0 0 48 48" id="hdr-auth-icon"><path fill="#4285F4" d="M44.5 20H24v8.5h11.8C34.7 33.9 30.1 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 4.1 29.6 2 24 2 11.8 2 2 11.8 2 24s9.8 22 22 22c11 0 21-8 21-22 0-1.3-.2-2.7-.5-4z"/></svg>
+            <img id="hdr-user-avatar" style="width:24px;height:24px;border-radius:50%;display:none;" src="" alt="">
+          </button>
+          <button class="hdr-btn" id="settings-fab" onclick="openSettingsSheet()">⚙️</button>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:2px 0 8px;">
+        <div class="net-dot" id="net-dot"></div>
+        <span id="hdr-level-badge" title="مستوى 1: مبتدئ"
+          style="font-size:18px;cursor:pointer;transition:transform .2s;"
+          onclick="switchTab('progress',document.getElementById('tab-btn-progress'))">🌱</span>
+        <div style="flex:1;max-width:80px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">
+          <div id="level-progress-bar" style="height:100%;width:0%;background:#D4A843;border-radius:2px;transition:width .6s;"></div>
+        </div>
+        <span id="xp-bar-text" style="font-size:10px;color:var(--gold);font-weight:700;opacity:.8;">0 XP</span>
+        <div style="display:none"><!--xp-placeholder-->
+        </div>
+        <span style="font-size:12px;color:var(--dim);">
+          <span id="hdr-streak">0</span> 🔥
+          <span id="hdr-freeze-btn" onclick="useStreakFreeze()" title="تجميد السلسلة"
+            style="cursor:pointer;opacity:.7;font-size:11px;margin-right:2px;">🧊</span>
+        </span>
+        <span style="font-size:12px;color:var(--dim);"><span id="hdr-cal">0</span> ⚡</span>
+      </div>
+  </header>
+
+  <div id="day-strip-container" style="display:none;"><div class="day-strip-wrap"><div id="day-strip"></div></div></div>
+  <div class="tab-content active" id="tab-home"></div>
+  <div class="tab-content" id="tab-workout"></div>
+
+  <div class="tab-content" id="tab-timer">
+    <div class="timer-wrap">
+      <div class="timer-svg">
+        <svg width="200" height="200" viewBox="0 0 200 200"><circle class="t-bg" cx="100" cy="100" r="88"/><circle class="t-fill" id="t-fill" cx="100" cy="100" r="88"/></svg>
+        <div class="timer-center"><div class="timer-time" id="t-display">00:00</div><div class="timer-lbl" id="t-lbl">مستعد</div></div>
+      </div>
+      <div class="presets">
+        <button class="preset" onclick="setTimer(60)">1د</button>
+        <button class="preset" onclick="setTimer(120)">2د</button>
+        <button class="preset" onclick="setTimer(180)">3د</button>
+        <button class="preset" onclick="setTimer(300)">5د</button>
+        <button class="preset" onclick="setTimer(600)">10د</button>
+        <button class="preset" onclick="setTimer(1200)">20د</button>
+      </div>
+      <div class="timer-btns">
+        <button class="t-btn primary" id="t-play-btn" onclick="timerToggle()">▶ تشغيل</button>
+        <button class="t-btn" onclick="timerReset()">↺ إعادة</button>
+      </div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-card-title">⚡ تاباتا</div>
+      <div class="tabata-row"><span class="tab-lbl" id="lbl-worktime">وقت العمل (ث)</span><div class="stepper"><button class="stp-btn" onclick="tabAdj('work',-5)">−</button><span class="stp-val" id="tab-work">20</span><button class="stp-btn" onclick="tabAdj('work',5)">+</button></div></div>
+      <div class="tabata-row"><span class="tab-lbl" id="lbl-resttime">وقت الراحة (ث)</span><div class="stepper"><button class="stp-btn" onclick="tabAdj('rest',-5)">−</button><span class="stp-val" id="tab-rest">10</span><button class="stp-btn" onclick="tabAdj('rest',5)">+</button></div></div>
+      <div class="tabata-row"><span class="tab-lbl" id="lbl-rounds">عدد الجولات</span><div class="stepper"><button class="stp-btn" onclick="tabAdj('rounds',-1)">−</button><span class="stp-val" id="tab-rounds">8</span><button class="stp-btn" onclick="tabAdj('rounds',1)">+</button></div></div>
+      <button class="save-btn" onclick="startTabata()" style="margin-top:8px;">🔥 ابدأ تاباتا</button>
+    </div>
+    <div class="sec-card" style="background:linear-gradient(135deg,rgba(212,168,67,.1),rgba(212,168,67,.04));border-color:rgba(212,168,67,.25);">
+      <div class="sec-card-title">🪢 متتبع الحبل</div>
+      <div class="rope-stats">
+        <div class="rope-stat"><div class="rope-stat-val" id="rope-jumps">0</div><div class="rope-stat-lbl" id="lbl-jumps">قفزة</div></div>
+        <div class="rope-stat"><div class="rope-stat-val" id="rope-meters">0</div><div class="rope-stat-lbl" id="lbl-meters">متر</div></div>
+        <div class="rope-stat"><div class="rope-stat-val" id="rope-mins">0</div><div class="rope-stat-lbl" id="lbl-mins">دقيقة</div></div>
+        <div class="rope-stat"><div class="rope-stat-val" id="rope-sessions">0</div><div class="rope-stat-lbl" id="lbl-sess">جلسة</div></div>
+        <div class="rope-stat" style="background:rgba(239,68,68,.1);border-radius:10px;"><div class="rope-stat-val" id="rope-live-cal" style="color:#f97316;">0</div><div class="rope-stat-lbl">🔥 سعرة</div></div>
+      </div>
+      <div class="rope-btns">
+        <button class="r-btn primary" id="rope-btn" onclick="ropeToggle()">▶ ابدأ</button>
+        <button class="r-btn" onclick="ropeReset()">↺ تصفير</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tab-content" id="tab-progress">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-big" id="p-done">0</div><div class="stat-lbl" id="lbl-done-stat">يوم مكتمل</div></div>
+      <div class="stat-box"><div class="stat-big" id="p-streak">0</div><div class="stat-lbl" id="lbl-streak-stat">سلسلة 🔥</div></div>
+      <div class="stat-box"><div class="stat-big" id="p-cal">0</div><div class="stat-lbl" id="lbl-cal-stat">سعرة ⚡</div></div>
+      <div class="stat-box"><div class="stat-big" id="p-remain">30</div><div class="stat-lbl" id="lbl-remain-stat">يوم متبقي</div></div>
+    </div>
+    <div id="start-date-info" style="display:none;justify-content:center;gap:4px;padding:8px 16px;font-size:12px;color:var(--dim);flex-wrap:wrap;"></div>
+    <div class="sec-card"><div class="sec-card-title" id="lbl-phases">المراحل</div><div id="phases-list"></div></div>
+    <div class="sec-card"><div class="sec-card-title">📊 مقارنة أسبوعية</div><div class="weekly-bars" id="weekly-bars"></div></div>
+    <div class="sec-card"><div class="sec-card-title">🗓️ تقويم 30 يوم</div><div class="cal-grid" id="cal-grid"></div></div>
+    <div class="sec-card">
+      <div class="sec-card-title">📏 قياسات الجسم</div>
+      <div class="measure-row">
+        <div class="m-wrap"><div class="m-lbl">الوزن (كغ)</div><input class="m-inp" id="m-weight" type="number" placeholder="70"></div>
+        <div class="m-wrap"><div class="m-lbl">الخصر (سم)</div><input class="m-inp" id="m-waist" type="number" placeholder="80"></div>
+        <div class="m-wrap"><div class="m-lbl">الصدر (سم)</div><input class="m-inp" id="m-chest" type="number" placeholder="95"></div>
+      </div>
+      <button class="save-btn" onclick="saveMeasurements()">💾 حفظ القياسات</button>
+    </div>
+    <div class="sec-card"><div class="sec-card-title">🏅 الشارات</div><div class="badges-grid" id="badges-grid"></div></div>
+
+    <!-- 🥗 يوميات التغذية اليومية -->
+    <div class="sec-card" style="border-color:rgba(34,197,94,.25);">
+      <div class="sec-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span style="color:var(--green);">🥗 يوميات التغذية</span>
+        <button onclick="openBarcodeScanner()"
+          style="padding:5px 10px;border-radius:8px;background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-size:11px;font-weight:700;cursor:pointer;"
+          title="مسح باركود المنتج">
+          📷 باركود</button>
+      </div>
+      <div id="nutrition-plan" style="margin-top:8px;"></div>
+    </div>
+  
+    <div class="sec-card" style="margin-top:12px;">
+      <div class="sec-card-title" style="display:flex;align-items:center;justify-content:space-between;">
+        <span>🧠 إحصاء ذكي</span>
+        <div style="display:flex;gap:6px;">
+          <button onclick="exportTrainingCSV()"
+            style="padding:5px 10px;border-radius:8px;background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);color:#22c55e;font-size:11px;font-weight:700;cursor:pointer;">
+            📥 CSV</button>
+          <button onclick="shareProgress()"
+            style="padding:5px 10px;border-radius:8px;background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.25);color:var(--gold);font-size:11px;font-weight:700;cursor:pointer;">
+            🏆 بطاقة</button>
+        </div>
+      </div>
+      <div id="smart-stats" style="margin-top:8px;"></div>
+    </div>
+    <div class="sec-card" style="margin-top:12px;">
+      <div class="sec-card-title">📅 سجل التدريبات</div>
+      <div id="training-history-list" style="display:flex;flex-direction:column;gap:8px;margin-top:8px;"></div>
+    </div>
+    <div style="padding:12px 0;">
+      <button onclick="shareProgress()" style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;color:var(--night);font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">📤 مشاركة تقدمي</button>
+    </div>
+    <div style="padding:0 0 8px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-radius:14px;background:var(--card2);border:1.5px solid var(--border);">
+        <div>
+          <div style="font-size:14px;font-weight:700;color:var(--txt);">🔔 تذكير التدريب اليومي</div>
+          <div id="notif-toggle-sub" style="font-size:11px;color:var(--dim);margin-top:2px;">اضغط لتفعيل التنبيهات</div>
+        </div>
+        <div id="notif-toggle" onclick="toggleNotifSwitch()" style="position:relative;width:52px;height:28px;border-radius:14px;background:rgba(100,116,139,.3);cursor:pointer;transition:background .3s;flex-shrink:0;">
+          <div id="notif-toggle-knob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .3s;"></div>
+        </div>
+      </div>
+    </div></div>
+
+  <div class="tab-content" id="tab-tips">
+    <div style="padding:16px;"><div id="tips-list"></div></div>
+  </div>
+  <div class="tab-content" id="tab-coach"></div>
+
+  <nav class="bottom-tabs">
+    <button class="tab-btn active" id="tab-btn-home" onclick="switchTab('home',this)"><span class="t-icon">🏠</span>الرئيسية</button>
+    <button class="tab-btn" id="tab-btn-workout" onclick="switchTab('workout',this)"><span class="t-icon">🏋️</span>تدريب</button>
+    <button class="tab-btn" id="tab-btn-timer" onclick="switchTab('timer',this)"><span class="t-icon">⏱️</span>مؤقت</button>
+    <button class="tab-btn" id="tab-btn-progress" onclick="switchTab('progress',this)"><span class="t-icon">📊</span>تقدم</button>
+    <button class="tab-btn" id="tab-btn-coach" onclick="switchTab('coach',this)"><span class="t-icon">🤖</span>مدرب</button>
+    
+  </nav>
+</div>
+
+<!-- SESSION OVERLAY — fixed, outside #app -->
+<div id="session-overlay">
+  <!-- Countdown screen -->
+  <div id="countdown-screen"><div class="cdn-num" id="cdn-num">3</div><div class="cdn-ex" id="cdn-ex"></div></div>
+  <!-- Celebration screen -->
+  <div id="sess-cel">
+    <div class="cel-trophy">🏆</div>
+    <div class="cel-title">أحسنت! جلسة رائعة!</div>
+    <div class="cel-sub" id="cel-sub">لقد أنجزت جلستك اليومية</div>
+    <div class="cel-stats" id="cel-stats"></div>
+    <button class="cel-btn" onclick="closeSession()">💪 رائع! إغلاق</button>
+  </div>
+  <!-- Session list panel -->
+  <div id="sess-list">
+    <div class="sl-hdr"><span class="sl-title">تمارين الجلسة</span><button class="sl-close" onclick="toggleSessList()">✕</button></div>
+    <div id="sl-items"></div>
+  </div>
+
+  <!-- ── Header ── -->
+  <div class="sess-hdr">
+    <div class="sess-hdr-left">
+      <button class="sess-hdr-ico" onclick="confirmCloseSession()" title="إغلاق" style="background:rgba(239,68,68,.2);color:#f87171;">✕</button>
+      <button class="sess-hdr-ico" onclick="toggleSessList()" title="قائمة التمارين" style="background:rgba(212,168,67,.15);color:var(--gold);">☰</button>
+      <button class="sess-hdr-ico" id="sess-pause-btn" onclick="sessPause()" title="إيقاف مؤقت" style="background:rgba(255,255,255,.12);">⏸</button>
+    </div>
+    <div class="sess-elapsed" id="sess-elapsed">00:00</div>
+    <div class="sess-hdr-right">
+      <span class="sess-hdr-lbl" id="sess-ex-num">1/7</span>
+      <button class="sess-hdr-ico" id="sess-landscape-btn" onclick="toggleLandscapeMode()" title="وضع أفقي">⤢</button>
+      <button class="sess-hdr-ico" onclick="toggleFullscreen()">⛶</button>
+      <button class="sess-hdr-ico" onclick="openSoundSheet()">🔊</button>
+    </div>
+  </div>
+
+  <!-- ── Progress dots ── -->
+  <div class="sess-track" id="sess-track"></div>
+
+  <!-- ── Main body ── -->
+  <div class="sess-body">
+    <!-- Exercise view -->
+    <div id="sess-ex-wrap">
+      <div class="sess-pill" id="sess-pill">استعد 🌙</div>
+      <div class="sess-ex-name" id="sess-ex-name">-</div>
+      <div class="sess-ex-en" id="sess-ex-en" style="margin-bottom:4px;">-</div>
+      <div class="sess-set-row">مجموعة <span class="sess-hl" id="sess-cur-set">1</span>/<span class="sess-hl" id="sess-tot-sets">3</span></div>
+      <!-- Image card -->
+      <div class="sess-img-card">
+        <div id="sess-icon">💪</div>
+      </div>
+      <!-- Timer (timer exercises) -->
+      <div id="sess-timer-wrap">
+        <div class="sess-digital-timer" id="sess-t-time">03:00</div>
+      </div>
+      <!-- Reps (reps/distance exercises) -->
+      <div class="sess-reps-display" id="sess-reps-wrap" style="display:none;">
+        <div class="sess-reps-num" id="sess-reps-num">15</div>
+        <div class="sess-reps-lbl">تكرار</div>
+      </div>
+      <!-- Hint + progress -->
+      <div class="sess-timer-hint" id="sess-timer-hint">اضغط لبدء المجموعة</div>
+      <div class="sess-prog-wrap"><div class="sess-prog-fill" id="sess-prog-bar" style="width:100%"></div></div>
+    </div>
+
+    <!-- Rest screen -->
+    <div class="sess-rest-scr" id="sess-rest-scr">
+      <div class="sess-pill rest">استراحة 😤</div>
+      <div class="rest-digital" id="rest-t-time">30</div>
+      <div class="sess-prog-wrap rest-prog-wrap"><div class="rest-prog-fill" id="rest-prog-bar" style="width:100%"></div></div>
+      <div class="rest-nxt" id="rest-nxt">التالي: -</div>
+    </div>
+  </div>
+
+  <!-- ── Landscape mode panels ── -->
+  <div id="sess-landscape-hdr">
+    <button onclick="confirmCloseSession()" style="background:rgba(239,68,68,.2);color:#f87171;border:none;border-radius:8px;width:28px;height:28px;font-size:13px;cursor:pointer;">✕</button>
+    <button onclick="sessPause()" id="sess-ls-pause" style="background:rgba(255,255,255,.1);border:none;border-radius:8px;width:28px;height:28px;font-size:13px;cursor:pointer;">⏸</button>
+    <div id="sess-ls-num" style="color:var(--gold);font-weight:700;font-size:12px;">1/7</div>
+    <div style="flex:1;"></div>
+    <div id="sess-ls-elapsed" style="font-size:12px;color:var(--dim);">00:00</div>
+    <button onclick="toggleLandscapeMode()" style="background:rgba(212,168,67,.15);border:none;border-radius:8px;width:28px;height:28px;font-size:13px;cursor:pointer;color:var(--gold);">⤡</button>
+  </div>
+  <div id="sess-body-left">
+    <div class="sess-img-card-ls" id="sess-ls-img"></div>
+    <div style="font-size:16px;font-weight:900;color:var(--txt);margin-top:8px;text-align:center;" id="sess-ls-name">-</div>
+    <div style="font-size:11px;color:var(--dim);margin-top:2px;text-align:center;" id="sess-ls-set">مجموعة 1/3</div>
+  </div>
+  <div id="sess-body-right">
+    <div class="ls-timer" id="sess-ls-timer">00:00</div>
+    <div style="font-size:12px;color:var(--dim);margin-top:-4px;" id="sess-ls-hint">اضغط لبدء</div>
+    <div style="width:100%;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden;"><div id="sess-ls-bar" style="height:100%;width:100%;background:var(--gold);border-radius:3px;transition:width .3s;"></div></div>
+    <div class="ls-btn-row">
+      <button class="ls-side-btn" onclick="sessPrev()">⏮</button>
+      <button class="ls-main-btn" onclick="sessMainAction()" id="sess-ls-main">▶ ابدأ</button>
+      <button class="ls-side-btn" onclick="sessSkip()">⏭</button>
+    </div>
+    <div style="display:flex;gap:8px;width:100%;">
+      <button onclick="sessAdjust('rest',-5)" style="flex:1;padding:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--dim);font-size:12px;cursor:pointer;">−راحة</button>
+      <button onclick="sessAdjust('rest',5)"  style="flex:1;padding:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--dim);font-size:12px;cursor:pointer;">+راحة</button>
+      <button onclick="sessAdjust('work',-10)" style="flex:1;padding:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--dim);font-size:12px;cursor:pointer;">−عمل</button>
+      <button onclick="sessAdjust('work',10)"  style="flex:1;padding:6px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--dim);font-size:12px;cursor:pointer;">+عمل</button>
+    </div>
+  </div>
+
+  <!-- ── Adjustment row ── -->
+  <div class="sess-adj-row">
+    <div class="sess-adj-box">
+      <div class="sess-adj-top">
+        <button class="sess-adj-btn" onclick="sessAdjust('rest',-5)">−</button>
+        <div class="sess-adj-val" id="adj-rest-val">25<span style="font-size:9px;opacity:.6;">ث</span></div>
+        <button class="sess-adj-btn" onclick="sessAdjust('rest',5)">+</button>
+      </div>
+      <div class="sess-adj-lbl">ث راحة</div>
+    </div>
+    <div class="sess-adj-box">
+      <div class="sess-adj-top">
+        <button class="sess-adj-btn" onclick="sessAdjust('work',-10)">−</button>
+        <div class="sess-adj-val" id="adj-work-val">180<span style="font-size:9px;opacity:.6;">ث</span></div>
+        <button class="sess-adj-btn" onclick="sessAdjust('work',10)">+</button>
+      </div>
+      <div class="sess-adj-lbl" id="adj-work-lbl">ث عمل</div>
+    </div>
+    <div class="sess-adj-box">
+      <div class="sess-adj-top">
+        <button class="sess-adj-btn" onclick="sessAdjust('sets',-1)">−</button>
+        <div class="sess-adj-val" id="adj-sets-val">3</div>
+        <button class="sess-adj-btn" onclick="sessAdjust('sets',1)">+</button>
+      </div>
+      <div class="sess-adj-lbl">مجموعة</div>
+    </div>
+  </div>
+
+  <!-- ── Footer ── -->
+  <div class="sess-ftr">
+    <div class="sess-btn-row">
+      <button class="sess-side-btn" id="sess-back-btn" onclick="sessPrev()" title="السابق">⏮</button>
+      <button class="sess-main-btn" id="sess-main-btn" onclick="sessMainAction()"><span id="sess-main-lbl">▶ ابدأ المجموعة 1</span></button>
+      <button class="sess-side-btn" id="sess-skip-btn" onclick="sessSkip()" title="تخطي التمرين كاملاً">⏭</button>
+    </div>
+    <button class="sess-auto-btn" id="sess-auto-btn" onclick="toggleAutoPlay()">
+      <span>⚡ بدء التلقائي للجولات</span>
+      <span class="sess-auto-dot" id="sess-auto-dot"></span>
+    </button>
+  </div>
+</div>
+
+<!-- THEME MODAL -->
+<div id="theme-modal" onclick="if(event.target===this)closeThemeModal()">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">🎨 اختر الثيم</div>
+    <div id="theme-grid"></div>
+  </div>
+</div>
+
+
+
+<!-- EXERCISE EDITOR MODAL -->
+<div id="ex-editor-modal" onclick="if(event.target===this)closeExEditor()">
+  <div class="ex-editor-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="ex-editor-title">✏️ تعديل التمرين</div>
+    <input type="hidden" id="ex-editor-id">
+    <input type="hidden" id="ex-editor-day">
+    <div class="ex-editor-row">
+      <span class="ex-editor-lbl">الاسم عربي</span>
+      <input class="ex-editor-inp" id="ex-ed-nameAr" placeholder="نط الحبل">
+    </div>
+    <div class="ex-editor-row">
+      <span class="ex-editor-lbl">English</span>
+      <input class="ex-editor-inp" id="ex-ed-nameEn" placeholder="Jump Rope">
+    </div>
+    <div class="ex-editor-row">
+      <span class="ex-editor-lbl">الأيقونة</span>
+      <input class="ex-editor-inp" id="ex-ed-icon" placeholder="🏃" style="width:60px;flex:none;font-size:20px;text-align:center;">
+      <span class="ex-editor-lbl" style="width:60px;">العضلات</span>
+      <input class="ex-editor-inp" id="ex-ed-muscles" placeholder="الساقان">
+    </div>
+    <div class="ex-editor-row">
+      <span class="ex-editor-lbl">المجموعات</span>
+      <input class="ex-editor-inp" id="ex-ed-sets" type="number" min="1" max="10" placeholder="3">
+      <span class="ex-editor-lbl" id="ex-ed-reps-lbl" style="width:70px;">التكرار</span>
+      <input class="ex-editor-inp" id="ex-ed-reps" type="number" min="1" placeholder="15">
+      <span class="ex-editor-lbl" style="width:50px;">النوع</span>
+      <select class="ex-editor-inp" id="ex-ed-type" style="flex:none;width:90px;" onchange="exEdTypeChange()">
+        <option value="reps">تكرار 💪</option>
+        <option value="timer">ثواني ⏱️</option>
+        <option value="distance">متر 📏</option>
+      </select>
+    </div>
+    <div class="ex-editor-row">
+      <span class="ex-editor-lbl">راحة بين المجموعات (ث)</span>
+      <input class="ex-editor-inp" id="ex-ed-rest" type="number" min="0" max="300" placeholder="30" style="width:80px;flex:none;">
+    </div>
+    <div style="margin-bottom:8px;">
+      <div class="ex-editor-lbl" style="width:100%;margin-bottom:6px;">الخطوات (سطر لكل خطوة)</div>
+      <textarea class="ex-editor-inp" id="ex-ed-steps" rows="4" style="width:100%;resize:vertical;" placeholder="قف مستقيماً&#10;أمسك الحبل&#10;ابدأ القفز"></textarea>
+    </div>
+    <button class="ex-add-btn" onclick="saveExEditor()">💾 حفظ التعديلات</button>
+    <button class="ex-del-btn" id="ex-del-btn" onclick="deleteExFromDay()">🗑️ حذف من اليوم</button>
+    <div style="border-top:1px solid var(--border);margin:16px 0 12px;"></div>
+    <div class="sheet-title" id="ex-add-from-title">➕ إضافة تمرين جديد لليوم</div>
+    <div id="ex-add-from-list" style="display:flex;flex-wrap:wrap;gap:8px;max-height:160px;overflow-y:auto;padding:4px 0;"></div>
+    <button class="ex-add-btn" style="margin-top:12px;background:rgba(212,168,67,.15);color:var(--gold);border:1.5px solid var(--gold);" onclick="showNewExForm()">✨ إنشاء تمرين جديد</button>
+    <div id="new-ex-form" style="display:none;margin-top:12px;">
+      <div class="ex-editor-row">
+        <span class="ex-editor-lbl">الاسم عربي</span>
+        <input class="ex-editor-inp" id="new-ex-nameAr" placeholder="اسم التمرين">
+      </div>
+      <div class="ex-editor-row">
+        <span class="ex-editor-lbl">English</span>
+        <input class="ex-editor-inp" id="new-ex-nameEn" placeholder="Exercise name">
+      </div>
+      <div class="ex-editor-row">
+        <span class="ex-editor-lbl">الأيقونة</span>
+        <input class="ex-editor-inp" id="new-ex-icon" placeholder="💪" style="width:60px;flex:none;font-size:20px;text-align:center;">
+        <span class="ex-editor-lbl" style="width:60px;">العضلات</span>
+        <input class="ex-editor-inp" id="new-ex-muscles" placeholder="الجسم كله">
+      </div>
+      <div class="ex-editor-row">
+        <span class="ex-editor-lbl">مجموعات</span>
+        <input class="ex-editor-inp" id="new-ex-sets" type="number" value="3" min="1" max="10">
+        <span class="ex-editor-lbl" style="width:60px;">تكرار</span>
+        <input class="ex-editor-inp" id="new-ex-reps" type="number" value="10" min="1">
+        <select class="ex-editor-inp" id="new-ex-type" style="flex:none;width:90px;">
+          <option value="reps">تكرار</option>
+          <option value="timer">ثواني</option>
+        </select>
+      </div>
+      <button class="ex-add-btn" onclick="createAndAddEx()">✅ إضافة للبرنامج</button>
+    </div>
+  </div>
+</div>
+
+<!-- DAY EDITOR MODAL -->
+<div id="day-editor-modal" onclick="if(event.target===this)closeDayEditor()" style="position:fixed;inset:0;z-index:7000;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;">
+  <div id="day-editor-sheet" style="background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:520px;height:90vh;max-height:90vh;overflow:hidden;position:relative;display:flex;flex-direction:column;">
+    <!-- PANEL 1: Exercise list -->
+    <div id="de-panel-list" style="display:flex;flex-direction:column;height:100%;overflow:hidden;">
+      <div style="display:flex;justify-content:center;padding:12px;flex-shrink:0;"><div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px;flex-shrink:0;">
+        <div style="font-size:16px;font-weight:900;color:var(--gold);">✏️ تمارين اليوم <span id="day-editor-label" style="color:var(--dim);font-size:13px;"></span></div>
+        <button onclick="closeDayEditor()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <div style="padding:0 16px;font-size:11px;color:var(--dim);margin-bottom:10px;text-align:center;flex-shrink:0;">اسحب ☰ للترتيب • ✏️ تعديل • 🗑️ حذف</div>
+      <div id="day-editor-list" style="padding:0 16px 80px;display:flex;flex-direction:column;gap:8px;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;flex:1;"></div>
+      <div style="padding:12px 16px;flex-shrink:0;">
+        <button onclick="deShowLibrary()" style="width:100%;padding:13px;border-radius:14px;background:rgba(212,168,67,.1);border:1.5px dashed rgba(212,168,67,.4);color:var(--gold);font-size:14px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;"><span>➕</span><span>إضافة تمرين</span></button>
+      </div>
+      <div style="padding:0 16px 20px;flex-shrink:0;">
+        <button onclick="closeDayEditor()" style="width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;color:var(--night);font-family:'Cairo',sans-serif;font-size:14px;font-weight:800;cursor:pointer;">✅ حفظ وإغلاق</button>
+      </div>
+    </div>
+    <!-- PANEL 2: Library picker (hidden by default) -->
+    <div id="de-panel-library" style="display:none;flex-direction:column;position:absolute;inset:0;background:var(--bg);overflow:hidden;">
+      <!-- Header -->
+      <div style="display:flex;align-items:center;padding:16px 20px;gap:12px;flex-shrink:0;border-bottom:1px solid var(--border);">
+        <button onclick="deHideLibrary()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.06);border:none;color:var(--txt);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;">←</button>
+        <div style="flex:1;font-size:16px;font-weight:900;color:var(--txt);">مكتبة التمارين</div>
+        <button onclick="openAddCustomEx()" style="display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;background:var(--gold);border:none;color:var(--night);font-family:'Cairo',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">+ تمرين جديد</button>
+      </div>
+      <!-- Search + Filters -->
+      <div style="padding:12px 16px 8px;flex-shrink:0;background:var(--bg);">
+        <div style="position:relative;margin-bottom:10px;">
+          <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:16px;">🔍</span>
+          <input id="de-lib-search" oninput="deLibSearch()" placeholder="ابحث عن تمرين..." style="width:100%;padding:10px 38px 10px 12px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;" />
+        </div>
+        <div id="de-lib-filters" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:4px;"></div>
+      </div>
+      <!-- Exercise List -->
+      <div id="de-lib-grid" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding" style="position:fixed;inset:0;z-index:10000;background:#080810;display:none;flex-direction:column;overflow:hidden;">
+  <div style="flex:1;overflow-y:auto;padding:0 0 80px;">
+    <div id="ob-steps"></div>
+  </div>
+  <div style="position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:#080810;border-top:1px solid var(--border);display:flex;gap:10px;align-items:center;z-index:10001;" id="ob-footer">
+    <div style="display:flex;gap:6px;flex:1;" id="ob-dots"></div>
+    <button onclick="obSkip()" style="padding:14px 16px;border-radius:14px;background:transparent;border:1px solid var(--border);color:var(--dim);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;">تخطي</button>
+    <button id="ob-next-btn" onclick="obNext()" style="padding:14px 28px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));color:var(--night);font-family:'Cairo',sans-serif;font-size:15px;font-weight:900;border:none;cursor:pointer;">التالي ←</button>
+  </div>
+</div>
+
+<!-- ADD CUSTOM EXERCISE MODAL -->
+<div id="add-custom-ex-modal" onclick="if(event.target===this)closeAddCustomEx()" style="position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.75);display:none;align-items:flex-end;justify-content:center;">
+  <div style="background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:520px;padding:0 0 32px;max-height:92vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:center;padding:12px"><div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 16px;">
+      <div style="font-size:16px;font-weight:900;color:var(--gold);">✚ إضافة تمرين جديد</div>
+      <button onclick="closeAddCustomEx()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;gap:12px;">
+      <!-- Image upload -->
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div id="cex-img-preview" onclick="document.getElementById('cex-img-inp').click()"
+          style="width:80px;height:80px;border-radius:14px;background:var(--card2);border:2px dashed rgba(212,168,67,.4);display:flex;align-items:center;justify-content:center;font-size:28px;cursor:pointer;flex-shrink:0;color:var(--gold);">📷</div>
+        <div style="flex:1;">
+          <div style="font-size:13px;color:var(--dim);margin-bottom:6px;">صورة أو GIF للتمرين (اختياري)</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button onclick="document.getElementById('cex-img-inp').click()" style="padding:8px 12px;border-radius:10px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25);color:var(--gold);font-size:12px;font-weight:700;cursor:pointer;">📁 رفع صورة / GIF</button>
+            <button onclick="showGifHowTo()" style="padding:8px 10px;border-radius:10px;background:rgba(99,102,241,.1);border:1px solid rgba(99,102,241,.3);color:#818cf8;font-size:11px;font-weight:700;cursor:pointer;">🎬 GIF كيف؟</button>
+          </div>
+        </div>
+        <input type="file" id="cex-img-inp" accept="image/*,image/gif" style="display:none" onchange="cexImgUpload(this)">
+      </div>
+      <!-- Fields -->
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">الاسم عربي *</div>
+            <input id="cex-nameAr" placeholder="مثال: القرفصاء" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+          </div>
+          <div style="width:60px;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">أيقونة</div>
+            <input id="cex-icon" placeholder="💪" style="width:100%;padding:10px 8px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:20px;text-align:center;box-sizing:border-box;outline:none;">
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">الاسم بالإنجليزية</div>
+          <input id="cex-nameEn" placeholder="Exercise name" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">العضلات المستهدفة</div>
+          <input id="cex-muscles" placeholder="مثال: الصدر، الكتفان" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+        </div>
+        <div style="display:flex;gap:8px;">
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">المجموعات</div>
+            <input id="cex-sets" type="number" value="3" min="1" max="10" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">التكرار</div>
+            <input id="cex-reps" type="number" value="10" min="1" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">النوع</div>
+            <select id="cex-type" style="width:100%;padding:10px 8px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;box-sizing:border-box;outline:none;">
+              <option value="reps">تكرار 💪</option>
+              <option value="timer">ثواني ⏱️</option>
+              <option value="distance">متر 📏</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">وقت الراحة بين المجموعات (ثانية)</div>
+          <input id="cex-rest" type="number" value="30" min="0" max="300" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;outline:none;">
+        </div>
+        <div>
+          <div style="font-size:11px;color:var(--dim);margin-bottom:4px;">الخطوات (سطر لكل خطوة، اختياري)</div>
+          <textarea id="cex-steps" rows="3" placeholder="قف مستقيماً&#10;انزل ببطء&#10;ارتفع بقوة" style="width:100%;padding:10px 12px;border-radius:10px;background:var(--card);border:1.5px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;box-sizing:border-box;outline:none;resize:vertical;"></textarea>
+        </div>
+      </div>
+      <button onclick="saveCustomEx()" style="padding:14px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;color:var(--night);font-family:'Cairo',sans-serif;font-size:15px;font-weight:900;cursor:pointer;margin-top:4px;">✅ حفظ التمرين</button>
+    </div>
+  </div>
+</div>
+
+<!-- SOUND SHEET -->
+<div id="sound-sheet">
+  <div class="sheet-handle"></div><div class="sheet-title">🔊 إعدادات الصوت</div>
+  <div class="snd-row"><span class="snd-lbl" id="snd-lbl-sound">الصوت</span><button class="toggle on" id="snd-toggle" onclick="toggleSound()"></button></div>
+  <div class="snd-row"><span class="snd-lbl" id="snd-lbl-tick">نقرات المؤقت</span><button class="toggle on" id="tick-toggle" onclick="toggleTick()"></button></div>
+  <div class="snd-row"><span class="snd-lbl" id="snd-lbl-tts">🎙️ صوت تحفيزي عربي</span><button class="toggle on" id="tts-toggle" onclick="toggleTTS()"></button></div>
+  <div class="snd-row" style="flex-direction:column;align-items:stretch;"><span class="snd-lbl" id="snd-lbl-vol" style="margin-bottom:8px;">مستوى الصوت</span><input type="range" class="vol-range" id="vol-range" min="0" max="100" value="80" oninput="setVolume(this.value)"></div>
+  <button onclick="testMotivationSpeech()" style="width:100%;padding:10px;border-radius:10px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25);color:var(--gold);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-top:6px;">🎙️ اختبر الصوت التحفيزي</button>
+  <button onclick="closeSoundSheet()" style="width:100%;padding:12px;border-radius:12px;background:var(--card);border:1px solid rgba(212,168,67,.15);margin-top:10px;font-size:14px;font-weight:700;">إغلاق</button>
+</div>
+
+<!-- COACH MODAL (Desktop/TV) -->
+<div id="coach-modal" style="display:none;position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);align-items:center;justify-content:center;" onclick="if(event.target===this)closeCoachModal()">
+  <div style="background:var(--dark);border:1px solid var(--border-strong);border-radius:20px;width:min(600px,96vw);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.6);">
+    <div style="padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gd));display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">🤖</div>
+      <div style="flex:1;">
+        <div style="font-size:15px;font-weight:900;color:var(--gold);">المدرب الذكي</div>
+        <div style="font-size:11px;color:#4ade80;">● متصل</div>
+      </div>
+      <button onclick="closeCoachModal()" style="background:none;border:none;color:var(--dim);font-size:24px;cursor:pointer;line-height:1;padding:4px 8px;">✕</button>
+    </div>
+    <div id="coach-modal-body" style="flex:1;overflow:hidden;display:flex;flex-direction:column;"></div>
+  </div>
+</div>
+
+<!-- SETTINGS SHEET -->
+<div id="settings-sheet" style="position:fixed;inset:0;z-index:5500;background:rgba(0,0,0,.6);display:none;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeSettingsSheet()">
+  <div style="background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:520px;padding:0 0 32px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:center;padding:12px"><div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2)"></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 20px 16px;">
+      <div style="font-size:16px;font-weight:900;color:var(--gold);">⚙️ الإعدادات</div>
+      <button onclick="closeSettingsSheet()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;">✕</button>
+    </div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;gap:16px;">
+
+      <!-- ☁️ Firebase Cloud Sync -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid rgba(66,133,244,.3);">
+        <div style="font-size:13px;font-weight:800;color:#4285f4;margin-bottom:4px;" data-i18n="cloudSyncTitle">☁️ المزامنة السحابية</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:12px;" data-i18n="cloudSyncDesc">سجّل دخول بـ Google لحفظ بياناتك على السحاب ومزامنتها بين أجهزتك.</div>
+        <div id="firebase-auth-area">
+          <button id="google-signin-btn" onclick="firebaseSignIn()" style="width:100%;padding:12px;border-radius:12px;background:rgba(66,133,244,.15);border:1.5px solid rgba(66,133,244,.4);color:#4285f4;font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path fill="#4285f4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34a853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#fbbc05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#ea4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+            <span data-i18n="googleSignIn">تسجيل الدخول بـ Google</span>
+          </button>
+          <div id="firebase-user-area" style="display:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <img id="firebase-user-photo" style="width:36px;height:36px;border-radius:50%;border:2px solid #4285f4;" src="" alt="">
+              <div>
+                <div id="firebase-user-name" style="font-size:13px;font-weight:700;color:var(--txt);"></div>
+                <div id="firebase-sync-status" style="font-size:11px;color:#4ade80;" data-i18n="syncedStatus">✅ متصل — بياناتك محفوظة</div>
+              </div>
+              <button onclick="firebaseSignOut()" style="margin-right:auto;padding:5px 10px;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:#f87171;font-size:11px;cursor:pointer;font-family:'Cairo',sans-serif;" data-i18n="signOut">خروج</button>
+            </div>
+            <button onclick="firebaseSyncNow()" style="width:100%;padding:10px;border-radius:10px;background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.3);color:#4285f4;font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;" data-i18n="syncNow">🔄 مزامنة الآن</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- API Key -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:4px;" data-i18n="apiKeyTitle">🤖 مفتاح Groq API الشخصي (اختياري)</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;">
+          <div style="font-size:11px;color:var(--dim);">التطبيق يعمل تلقائياً. المفتاح الشخصي يعطيك أولوية أعلى وهو مجاني.</div>
+          <button onclick="showGroqHowTo()" style="padding:6px 12px;border-radius:9px;background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.3);color:var(--gold);font-family:'Cairo',sans-serif;font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;flex-shrink:0;">❓ كيف أحصل عليه؟</button>
+        </div>
+        <input id="settings-apikey" type="password" placeholder="gsk_..." 
+          style="width:100%;padding:10px 12px;border-radius:10px;background:var(--bg);border:1.5px solid var(--border);color:var(--txt);font-family:monospace;font-size:13px;box-sizing:border-box;outline:none;">
+        <button onclick="saveApiKey()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;background:rgba(212,168,67,.15);border:1.5px solid var(--gold);color:var(--gold);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💾 حفظ المفتاح</button>
+          <button onclick="diagnoseCoach()" style="width:100%;margin-top:6px;padding:10px;border-radius:12px;background:rgba(56,189,248,.1);border:1px solid rgba(56,189,248,.25);color:#38bdf8;font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;">🔍 تشخيص اتصال المدرب</button>
+      </div>
+
+      <!-- User Profile -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:12px;" data-i18n="profileTitle">👤 الملف الشخصي</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);" class="profile-lbl">الاسم</span>
+            <input id="set-name" style="width:140px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;text-align:center;outline:none;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);" class="profile-lbl">الوزن (كغ)</span>
+            <input id="set-weight" type="number" style="width:80px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;text-align:center;outline:none;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);" class="profile-lbl">الطول (سم)</span>
+            <input id="set-height" type="number" style="width:80px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;text-align:center;outline:none;">
+          </div>
+          <!-- عمر وجنس -->
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);">العمر</span>
+            <input id="set-age" type="number" min="10" max="99" placeholder="25" style="width:80px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;text-align:center;outline:none;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);">الجنس</span>
+            <div style="display:flex;gap:6px;">
+              <button id="set-gender-male" onclick="setSettingsGender('male')" style="padding:5px 12px;border-radius:8px;background:rgba(99,102,241,.2);border:1px solid #6366f1;color:var(--txt);font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;">👨 ذكر</button>
+              <button id="set-gender-female" onclick="setSettingsGender('female')" style="padding:5px 12px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:12px;cursor:pointer;">👩 أنثى</button>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);" class="profile-lbl">وقت التدريب</span>
+            <input id="set-traintime" type="time" style="width:110px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+          </div>
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-size:13px;color:var(--dim);" class="profile-lbl">تاريخ بدء البرنامج</span>
+            <input id="set-startdate" type="date" style="width:140px;padding:6px 10px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+          </div>
+        </div>
+        <button onclick="saveProfile()" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;background:rgba(212,168,67,.15);border:1.5px solid var(--gold);color:var(--gold);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">💾 حفظ الملف</button>
+      </div>
+
+      <!-- Install App -->
+      <div id="install-section" style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid rgba(56,189,248,.2);">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:4px;" data-i18n="installTitle">📲 تثبيت التطبيق</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:12px;" data-i18n="installDesc">احفظ التطبيق على شاشتك الرئيسية للوصول السريع دون إنترنت</div>
+        <button id="settings-install-btn" onclick="installPWAFromSettings()" style="width:100%;padding:12px;border-radius:12px;background:linear-gradient(135deg,var(--gl),var(--gd));color:var(--night);font-family:'Cairo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;" data-i18n="installBtnAndroid">📲 تثبيت الآن</button>
+        <div id="install-ios-hint" style="display:none;margin-top:10px;padding:10px;background:rgba(255,255,255,.05);border-radius:10px;font-size:11px;color:var(--dim);text-align:center;line-height:1.7;" data-i18n="installIosHint">لتثبيت التطبيق على iOS: اضغط على زر المشاركة ثم "إضافة إلى الشاشة الرئيسية"</div>
+      </div>
+
+
+      <!-- 🔔 الإشعارات -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:2px;">🔔 تذكير التدريب اليومي</div>
+            <div id="settings-notif-sub" style="font-size:11px;color:var(--dim);margin-top:2px;">اضغط لتفعيل التنبيهات</div>
+          </div>
+          <div id="settings-notif-toggle" onclick="toggleNotifFromSettings()" style="position:relative;width:52px;height:28px;border-radius:14px;background:rgba(100,116,139,.3);cursor:pointer;transition:background .3s;flex-shrink:0;">
+            <div id="settings-notif-knob" style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .3s;"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Program Switcher -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:8px;" data-pgm-title>📅 اختيار البرنامج</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          <button id="pgm-btn-standard" onclick="switchProgram('standard')"
+            style="padding:12px 10px;border-radius:12px;background:rgba(212,168,67,.2);border:2px solid var(--gold);color:var(--txt);font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+            <span class="pgm-lbl">🔥 المتقدم</span><br><span class="pgm-sub" style="font-size:10px;color:var(--dim);">30+ يوم</span>
+          </button>
+          <button id="pgm-btn-beginner" onclick="switchProgram('beginner')"
+            style="padding:12px 10px;border-radius:12px;background:var(--bg);border:2px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">
+            <span class="pgm-lbl">🌱 المبتدئين</span><br><span class="pgm-sub" style="font-size:10px;color:var(--dim);">21 يوم</span>
+          </button>
+        </div>
+        <div id="pgm-desc" style="font-size:11px;color:var(--dim);line-height:1.7;background:var(--bg);border-radius:8px;padding:8px 10px;">
+          🔥 برنامج متكامل: HIIT + قوة + كور. مناسب لمن لديهم لياقة أساسية.
+        </div>
+      </div>
+
+      <!-- دعم البريد الإلكتروني -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;border:1.5px solid rgba(212,168,67,.25);">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:4px;">✉️ تواصل معنا</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:8px;line-height:1.7;">هل لديك مشكلة، اقتراح، أو فكرة؟ راسلنا مباشرة على البريد الإلكتروني.</div>
+        <div style="background:rgba(212,168,67,.08);border-radius:10px;padding:10px 12px;margin-bottom:12px;border:1px solid rgba(212,168,67,.2);">
+          <div style="font-size:12px;color:var(--gold);font-weight:700;margin-bottom:3px;">💡 واجهتك مشكلة في التطبيق؟</div>
+          <div style="font-size:11px;color:var(--dim);line-height:1.7;">لا تتردد في التواصل معنا من هنا — نرد في أقرب وقت ممكن ونعمل على حل المشكلة فوراً.</div>
+        </div>
+        <a href="mailto:azem.chihani@gmail.com?subject=AZEM App — استفسار"
+          style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));color:var(--night);font-family:'Cairo',sans-serif;font-size:15px;font-weight:900;text-decoration:none;box-sizing:border-box;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+          azem.chihani@gmail.com
+        </a>
+      </div>
+
+      <!-- Onboarding reset -->
+      <div style="background:var(--card);border-radius:16px;padding:16px;">
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:8px;" data-i18n="helpTitle">❓ التعليمات</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:10px;" data-help-q>هل تريد مراجعة شرح التطبيق مرة أخرى؟</div>
+        <button data-restart-tutorial onclick="closeSettingsSheet();setTimeout(startTutorial,300);" style="width:100%;padding:12px;border-radius:10px;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.25);color:var(--gold);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:10px;">🎯 إعادة التعليمات</button>
+        <div style="font-size:13px;font-weight:800;color:var(--gold);margin-bottom:8px;margin-top:4px;" data-reset-title>🔄 إعادة التهيئة</div>
+        <button data-reset-btn onclick="const L=LANGS[currentLang]||LANGS.ar;if(confirm(L.resetSetupConfirm||'إعادة شاشة الإعداد الأولى؟')){S.onboardingDone=false;saveState();closeSettingsSheet();showOnboarding();}" style="width:100%;padding:10px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--dim);font-family:'Cairo',sans-serif;font-size:13px;cursor:pointer;">إعادة شاشة الإعداد الأولى</button>
+
+        <!-- حذف كل البيانات -->
+        <div style="font-size:13px;font-weight:800;color:#ef4444;margin-bottom:8px;margin-top:16px;">🗑️ حذف جميع البيانات</div>
+        <div style="font-size:11px;color:var(--dim);margin-bottom:10px;line-height:1.7;">سيتم حذف جميع بياناتك من الجهاز ومن السحابة نهائياً. لا يمكن التراجع.</div>
+        <button onclick="window.deleteAllUserData()" style="width:100%;padding:11px;border-radius:10px;background:rgba(239,68,68,.1);border:1.5px solid rgba(239,68,68,.4);color:#ef4444;font-family:'Cairo',sans-serif;font-size:13px;font-weight:800;cursor:pointer;">🗑️ حذف جميع البيانات نهائياً</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FABs -->
+<div class="fab" id="fab-theme" title="الثيم">🎨</div>
+
+
+<!-- DESKTOP SHELL -->
+<div id="desktopShell">
+  <div class="dt-topbar">
+    <div><div class="dt-logo">AZEM (عزم)</div></div>
+    <div class="dt-day-strip" id="dt-day-strip"></div>
+    <div class="dt-topbar-actions">
+      <button class="dt-topbar-btn" onclick="openAICoach()" style="background:rgba(212,168,67,.15);border-color:rgba(212,168,67,.4);color:var(--gold);">🤖 مدرب</button>
+      <button class="dt-topbar-btn" onclick="startGuidedSession()" style="background:linear-gradient(135deg,var(--gold),var(--gd));color:var(--night);border:none;">▶ جلسة موجهة</button>
+      <button id="dt-install-btn" class="dt-topbar-btn" onclick="homeInstallNow(this)" style="background:linear-gradient(135deg,var(--gl),var(--gd));color:var(--night);border:none;display:none;">📲 تثبيت</button>
+      <button class="dt-topbar-btn" onclick="cycleMode()">📱 جوال</button>
+      <button class="dt-topbar-btn" onclick="cycleLang()" id="dt-lang-btn" style="font-size:11px;font-weight:900;letter-spacing:.5px;">AR</button>
+      <button class="dt-topbar-btn" onclick="openSoundSheet()">🔊</button>
+      <button class="dt-topbar-btn" onclick="openSettingsSheet()">⚙️</button>
+      <span id="dt-net-dot" style="font-size:13px">🟢</span>
+    </div>
+    <div id="dt-theme-dots" class="dt-theme-dots"></div>
+  </div>
+  <div class="dt-main">
+    <div class="dt-right">
+      <div class="dt-panel">
+        <div class="dt-panel-title">📊 الإحصاء</div>
+        <div class="dt-stat-row"><span class="dt-stat-lbl" id="dt-lbl-day">اليوم</span><span class="dt-stat-val" id="dt-st-day">1</span></div>
+        <div class="dt-stat-row"><span class="dt-stat-lbl" id="dt-lbl-done">مكتمل</span><span class="dt-stat-val" id="dt-st-done">0</span></div>
+        <div class="dt-stat-row"><span class="dt-stat-lbl" id="dt-lbl-str">🔥 سلسلة</span><span class="dt-stat-val" id="dt-st-str">0</span></div>
+        <div class="dt-stat-row"><span class="dt-stat-lbl" id="dt-lbl-cal">⚡ كالوري</span><span class="dt-stat-val" id="dt-st-cal">0</span></div>
+      </div>
+      <div class="dt-panel">
+        <div class="dt-panel-title">⏱️ المؤقت</div>
+        <div class="dt-timer-ring">
+          <svg class="dt-t-svg" viewBox="0 0 120 120">
+            <circle class="dt-t-track" cx="60" cy="60" r="52"/>
+            <circle class="dt-t-prog" cx="60" cy="60" r="52" id="dt-t-prog"/>
+          </svg>
+          <div class="dt-t-center">
+            <div class="dt-t-time" id="dt-t-disp">01:00</div>
+            <div class="dt-t-phase" id="dt-t-phase">جاهز</div>
+          </div>
+        </div>
+        <div class="dt-timer-ctrls">
+          <button class="dt-tcb" onclick="timerReset()">↺</button>
+          <button class="dt-tcb main" onclick="timerToggle()" id="dt-play-btn">▶</button>
+          <button class="dt-tcb" onclick="setTimer(60)" style="font-size:10px">1د</button>
+        </div>
+        <div class="dt-presets">
+          <button class="dt-pre" onclick="setTimer(20)">20ث</button>
+          <button class="dt-pre" onclick="setTimer(30)">30ث</button>
+          <button class="dt-pre" onclick="setTimer(45)">45ث</button>
+          <button class="dt-pre active" onclick="setTimer(60)">1د</button>
+          <button class="dt-pre" onclick="setTimer(90)">90ث</button>
+          <button class="dt-pre" onclick="setTimer(120)">2د</button>
+        </div>
+      </div>
+    </div>
+    <div class="dt-center" id="dt-center">
+      <div class="dt-center-empty"><div class="dt-center-empty-icon">💪</div><div>اختر تمريناً من القائمة</div><div style="font-size:11px;opacity:.5">أو ابدأ جلسة موجهة كاملة</div></div>
+    </div>
+    <div class="dt-left">
+      <div class="dt-left-hdr">
+        <span class="dt-left-title" id="dt-plan-label">تمارين اليوم</span>
+        <button onclick="openDayEditor(S.currentDay)" style="font-size:11px;padding:4px 8px;border-radius:7px;background:rgba(212,168,67,.12);border:1px solid rgba(212,168,67,.25);color:var(--gold);cursor:pointer;font-weight:700;">✏️</button>
+        <button class="dt-session-btn" onclick="startGuidedSession()">▶ جلسة</button>
+      </div>
+      <div class="dt-ex-list" id="dt-ex-list"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- DESKTOP KEYBOARD BAR -->
+<div id="kb-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:400;background:rgba(8,8,20,.95);backdrop-filter:blur(16px);border-top:1px solid rgba(212,168,67,.15);padding:7px 20px;flex-direction:row;align-items:center;gap:16px;flex-wrap:wrap;">
+<div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">1-7</span><span style="font-size:11px;color:#d4a843;white-space:nowrap;">ثيم</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">8</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">وضع</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">Space</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">مؤقت</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">Enter</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">جلسة</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">↑↓</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">يوم</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">D</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">إنهاء اليوم</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">A</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">مدرب AI</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">M</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">وضع</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">S</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">صوت</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">F</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">ملء الشاشة</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">L</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">لغة</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">KS</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">مختصرات</span></div>
+  <div style="display:flex;align-items:center;gap:5px;"><span style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:5px;padding:2px 8px;font-size:11px;font-family:monospace;color:#ccc;white-space:nowrap;">Esc</span><span style="font-size:11px;color:var(--dim);white-space:nowrap;">إغلاق</span></div>
+  <div style="flex:1;"></div>
+  <div style="font-size:10px;color:rgba(255,255,255,.2);">AZEM</div>
+</div>
+<!-- ACTIVE REST OVERLAY -->
+<div id="active-rest-overlay" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(8,8,20,.97);flex-direction:column;align-items:center;justify-content:center;padding:20px;">
+  <div style="width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <!-- Header -->
+    <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
+      <button id="ar-back-btn" onclick="arPrev()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--txt);font-size:18px;cursor:pointer;">←</button>
+      <div style="font-size:16px;font-weight:900;color:var(--gold);">🧘 راحة نشطة</div>
+      <button onclick="closeActiveRest()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:var(--dim);font-size:18px;cursor:pointer;">✕</button>
+    </div>
+    <!-- Progress dots -->
+    <div id="ar-dots" style="display:flex;gap:6px;align-items:center;"></div>
+    <!-- Timer ring -->
+    <div style="position:relative;width:140px;height:140px;flex-shrink:0;">
+      <svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg);">
+        <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="8"/>
+        <circle id="ar-ring" cx="70" cy="70" r="60" fill="none" stroke="var(--gold)" stroke-width="8"
+          stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="0" style="transition:stroke-dashoffset .8s,stroke .5s;"/>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <div id="ar-timer-num" style="font-size:36px;font-weight:900;color:var(--gold);line-height:1;">30</div>
+        <div style="font-size:11px;color:var(--dim);">ثانية</div>
+      </div>
+    </div>
+    <!-- Icon + Name -->
+    <div id="ar-icon" style="font-size:48px;line-height:1;">🧘</div>
+    <div id="ar-name" style="font-size:20px;font-weight:900;color:var(--txt);text-align:center;"></div>
+    <!-- Progress -->
+    <div id="ar-progress" style="font-size:13px;color:var(--dim);"></div>
+    <!-- Steps -->
+    <div id="ar-steps" style="background:var(--card);border-radius:14px;padding:14px 16px;width:100%;font-size:13px;color:var(--dim);line-height:2;box-sizing:border-box;"></div>
+    <!-- Buttons -->
+    <div style="display:flex;gap:10px;width:100%;">
+      <button onclick="arSkip()" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--dim);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">تخطي</button>
+      <button id="ar-main-btn" onclick="arSkip()" style="flex:2;padding:13px;border-radius:14px;background:linear-gradient(135deg,var(--gold),var(--gd));border:none;color:var(--night);font-family:'Cairo',sans-serif;font-size:14px;font-weight:900;cursor:pointer;">التالي ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- NUTRITION MODAL -->
+<div id="nut-modal" onclick="if(event.target===this)closeNutritionModal()"
+  style="display:none;position:fixed;inset:0;z-index:8500;background:rgba(0,0,0,.78);align-items:flex-end;justify-content:center;">
+  <div style="background:var(--bg);border-radius:24px 24px 0 0;width:100%;max-width:520px;height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+    <!-- Handle + Header -->
+    <div style="flex-shrink:0;padding:12px 20px 0;">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto 14px;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-size:16px;font-weight:900;color:var(--green);">🥗 إضافة طعام</div>
+        <button onclick="closeNutritionModal()" style="background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;">✕</button>
+      </div>
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:10px;">
+        <span style="position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--dim);font-size:15px;">🔍</span>
+        <input id="nut-search-inp" oninput="nutSearch(this.value)" placeholder="ابحث بالعربي أو الإنجليزي... 🌍"
+          style="width:100%;padding:10px 38px 10px 12px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:14px;box-sizing:border-box;">
+      </div>
+      <!-- Category Tabs -->
+      <div id="nut-cat-tabs" style="display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;padding-bottom:10px;"></div>
+    </div>
+
+    <!-- Food List -->
+    <div id="nut-food-list" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding:0 16px;"></div>
+
+    <!-- Custom Food Entry -->
+    <div style="flex-shrink:0;border-top:1px solid var(--border);padding:12px 16px;">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:6px;font-weight:700;">➕ وجبة مخصصة</div>
+      <div style="display:flex;gap:8px;">
+        <input id="nut-custom-name" placeholder="اسم الطعام" style="flex:1;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;outline:none;">
+        <input id="nut-custom-cal" type="number" placeholder="كال" style="width:70px;padding:9px 8px;border-radius:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);color:var(--txt);font-family:'Cairo',sans-serif;font-size:13px;text-align:center;outline:none;">
+        <button onclick="nutAddCustom()" style="padding:9px 14px;border-radius:10px;background:rgba(34,197,94,.15);border:1.5px solid rgba(34,197,94,.4);color:var(--green);font-family:'Cairo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">أضف</button>
+      </div>
+    </div>
+
+    <!-- Quantity Panel (appears when food selected) -->
+    <div id="nut-qty-panel" style="display:none;flex-shrink:0;position:fixed;bottom:0;right:0;left:0;max-width:520px;margin:0 auto;background:var(--bg);border-radius:24px 24px 0 0;border-top:2px solid rgba(34,197,94,.4);padding:20px 20px 32px;flex-direction:column;gap:14px;z-index:9000;">
+      <div style="width:36px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);margin:0 auto;"></div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <span id="qty-food-icon" style="font-size:40px;line-height:1;">🥚</span>
+        <div>
+          <div id="qty-food-name" style="font-size:16px;font-weight:900;color:var(--txt);"></div>
+          <div id="qty-food-unit" style="font-size:12px;color:var(--dim);margin-top:2px;"></div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:20px;">
+        <button onclick="nutAdjQty(-0.5)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);border:1.5px solid var(--border);color:var(--txt);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+        <div style="text-align:center;min-width:60px;">
+          <div id="qty-num" style="font-size:32px;font-weight:900;color:var(--gold);line-height:1;">1</div>
+          <div style="font-size:10px;color:var(--dim);">الكمية</div>
+        </div>
+        <button onclick="nutAdjQty(0.5)" style="width:44px;height:44px;border-radius:50%;background:rgba(255,255,255,.08);border:1.5px solid var(--border);color:var(--txt);font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+      </div>
+      <div style="text-align:center;font-size:18px;font-weight:900;color:var(--green);">
+        <span id="qty-total-cal">0</span> <span style="font-size:13px;font-weight:400;color:var(--dim);">سعرة</span>
+      </div>
+      <div style="display:flex;gap:10px;">
+        <button onclick="document.getElementById('nut-qty-panel').style.display='none';" style="flex:1;padding:13px;border-radius:14px;background:var(--card);border:1px solid var(--border);color:var(--dim);font-family:'Cairo',sans-serif;font-size:14px;cursor:pointer;">رجوع</button>
+        <button onclick="confirmNutAdd()" style="flex:2;padding:13px;border-radius:14px;background:linear-gradient(135deg,rgba(34,197,94,.8),rgba(34,197,94,.6));border:none;color:#fff;font-family:'Cairo',sans-serif;font-size:15px;font-weight:900;cursor:pointer;">✅ إضافة للسجل</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BADGE TOAST -->
+<div id="badge-toast"><div class="bt-icon" id="bt-icon">🏅</div><div class="bt-text"><div class="bt-title">🎉 شارة جديدة!</div><div class="bt-name" id="bt-name">-</div><div class="bt-desc" id="bt-desc">-</div></div></div>
+
+<button id="pwa-btn" onclick="installPWA()" data-i18n="installApp">📲 تثبيت التطبيق</button>
+<div id="mini-toast"></div>
+
+
+<!-- ═══ GIF DATA — يُحمَّل بعد المحتوى لا يعطل العرض ═══ -->
+<script>
+// EXERCISE_GIFS يبدأ فارغاً — سيُملأ بعد تحميل gifs.js
+window.EXERCISE_GIFS = {};
+window._gifsLoading = true;
+
+function _initGifs() {
+  window.EXERCISE_GIFS =
+    (typeof GIFS !== 'undefined' && Object.keys(GIFS).length) ? GIFS :
+    (typeof EXERCISE_GIFS !== 'undefined' && Object.keys(EXERCISE_GIFS).length) ? EXERCISE_GIFS :
+    (typeof GIF_DATA !== 'undefined') ? GIF_DATA : {};
+  window._gifsLoading = false;
+  // إعادة رسم شاشة التدريب بعد تحميل الصور
+  if (typeof renderWorkoutTab === 'function') renderWorkoutTab();
+}
+
+(function loadGifsDeferred() {
+  // نؤجل تحميل gifs.js حتى بعد تحميل المحتوى الأساسي
+  function doLoad() {
+    var s = document.createElement('script');
+    s.src = 'gifs.js';
+    s.onload = _initGifs;
+    s.onerror = function() { window._gifsLoading = false; };
+    document.body.appendChild(s);
+  }
+  if (document.readyState === 'complete') {
+    doLoad();
+  } else {
+    window.addEventListener('load', doLoad);
+  }
+})();
+</script>
+
+<!-- ═══ JS MODULES (order matters) ═══ -->
+<script src="js/data.js?v=28"></script>
+<script src="js/audio.js?v=28"></script>
+<script src="js/i18n.js?v=28"></script>
+<script src="js/timer.js?v=28"></script>
+<script src="js/session.js?v=28"></script>
+<script src="js/render.js?v=28"></script>
+<script src="js/editor.js?v=28"></script>
+<script src="js/ui.js?v=28"></script>
+<script src="js/coach.js?v=28"></script>
+<script src="js/charts.js?v=28"></script>
+<script src="js/nutrition.js?v=28"></script>
+
+<!-- ═══ FIREBASE (module) ═══ -->
+<script type="module" src="js/firebase.js"></script>
+
+<script>
+// ══════════════════════════════════════
+// ERROR BOUNDARY — شاشة واضحة عند الكراش
+// ══════════════════════════════════════
+window.addEventListener('error', function(e) {
+  // تجاهل أخطاء الـ intro والـ canvas
+  if (e.filename && (e.filename.includes('chart') || e.filename.includes('gtag'))) return;
+  if (e.message && e.message.includes('Script error')) return;
+
+  const app = document.getElementById('app');
+  const onboarding = document.getElementById('onboarding');
+  if (onboarding && onboarding.style.display !== 'none') return; // لا تُظهر أثناء onboarding
+
+  // تحقق إذا كان التطبيق محمّل فعلاً
+  if (!app) return;
+
+  console.error('[AZEM Error]', e.message, e.filename, e.lineno);
+
+  // لا نُظهر الشاشة لأخطاء بسيطة
+  const critical = e.message && (
+    e.message.includes('is not defined') ||
+    e.message.includes('Cannot read') ||
+    e.message.includes('null') ||
+    e.message.includes('undefined')
+  );
+  if (!critical) return;
+
+  // عرض شاشة الخطأ
+  _showErrorScreen(e.message);
+});
+
+window.addEventListener('unhandledrejection', function(e) {
+  if (e.reason && e.reason.toString().includes('AbortError')) return;
+  console.warn('[AZEM] Unhandled Promise:', e.reason);
+});
+
+function _showErrorScreen(msg) {
+  // لا نُظهرها أكثر من مرة
+  if (document.getElementById('azem-error-screen')) return;
+
+  const div = document.createElement('div');
+  div.id = 'azem-error-screen';
+  div.style.cssText = [
+    'position:fixed', 'inset:0', 'z-index:99999',
+    'background:#07090F', 'display:flex', 'flex-direction:column',
+    'align-items:center', 'justify-content:center',
+    'padding:32px 24px', 'gap:16px', 'font-family:Cairo,sans-serif',
+  ].join(';');
+
+  div.innerHTML = `
+    <div style="font-size:48px;">⚠️</div>
+    <div style="font-size:20px;font-weight:900;color:#D4A843;text-align:center;">
+      حدث خطأ غير متوقع
+    </div>
+    <div style="font-size:13px;color:rgba(255,255,255,.5);text-align:center;line-height:1.7;max-width:300px;">
+      التطبيق واجه مشكلة. بياناتك محفوظة ولم تُفقد.
+    </div>
+    <button onclick="location.reload()"
+      style="padding:14px 32px;border-radius:14px;
+      background:linear-gradient(135deg,#D4A843,#B8892F);
+      border:none;color:#07090F;font-family:Cairo,sans-serif;
+      font-size:15px;font-weight:900;cursor:pointer;margin-top:8px;">
+      🔄 إعادة تشغيل
+    </button>
+    <button onclick="localStorage.removeItem('azem_S');location.reload()"
+      style="padding:10px 20px;border-radius:12px;
+      background:transparent;border:1px solid rgba(239,68,68,.3);
+      color:rgba(239,68,68,.6);font-family:Cairo,sans-serif;
+      font-size:12px;cursor:pointer;">
+      🗑️ إعادة تعيين البيانات (آخر خيار)
+    </button>`;
+
+  document.body.appendChild(div);
+}
+
+// كشف عالمي للاستخدام اليدوي
+window._showErrorScreen = _showErrorScreen;
+</script>
+
+<script>
+// _revealApp معرّفة مبكراً في أعلى الـ body
+</script>
+</body>
+</html>

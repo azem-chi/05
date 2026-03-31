@@ -2,7 +2,7 @@
 /* ══════ SHARED API KEY — ضع مفتاح Groq المشترك هنا ══════ */
 /* ضع مفتاح Groq المشترك هنا — سيُستخدم لجميع المستخدمين */
 /* مثال: const SHARED_GROQ_KEY = ''; */
-const SHARED_GROQ_KEY = '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';
+const SHARED_GROQ_KEY = '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';
 
 /* ══════════════════════════════════════════
    XSS PROTECTION — دالة موحدة لجميع الملفات
